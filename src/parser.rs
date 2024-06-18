@@ -74,10 +74,11 @@ pub fn parse(tokens: Vec<Token>) -> Result<Program, common::Error> {
                 stack.push(i);
             }
             TokenType::End => {
-                let while_pos = stack.pop().ok_or(common::Error::ParseError {
+                let while_pos = stack.pop().ok_or(common::Error::Parse {
                     word: "end".to_string(),
                     pos: token.pos,
                     line: token.line,
+                    comment: "This `end` has no matching while".to_string(),
                 })?;
                 instructions.push(Instruction {
                     instruction_type: InstructionType::End(while_pos),
@@ -96,10 +97,11 @@ pub fn parse(tokens: Vec<Token>) -> Result<Program, common::Error> {
     }
     if !stack.is_empty() {
         let last_while = stack.pop().unwrap();
-        Err(common::Error::ParseError {
+        Err(common::Error::Parse {
             word: "while".to_string(),
             pos: tokens[last_while].pos,
             line: tokens[last_while].line,
+            comment: "This `while` has no matching end".to_string(),
         })
     } else {
         Ok(Program(instructions))
@@ -355,10 +357,17 @@ mod parser_test {
         ];
         let result = parse(tokens);
         assert!(result.is_err());
-        if let Err(common::Error::ParseError { word, pos, line }) = result {
+        if let Err(common::Error::Parse {
+            word,
+            pos,
+            line,
+            comment,
+        }) = result
+        {
             assert_eq!(word, "while".to_string());
             assert_eq!(pos, 1);
             assert_eq!(line, 1);
+            assert_eq!(comment, "This `while` has no matching end".to_string());
         } else {
             panic!("Expected ParseError");
         }
@@ -380,10 +389,17 @@ mod parser_test {
         ];
         let result = parse(tokens);
         assert!(result.is_err());
-        if let Err(common::Error::ParseError { word, pos, line }) = result {
+        if let Err(common::Error::Parse {
+            word,
+            pos,
+            line,
+            comment,
+        }) = result
+        {
             assert_eq!(word, "end".to_string());
             assert_eq!(pos, 2);
             assert_eq!(line, 1);
+            assert_eq!(comment, "This `end` has no matching while".to_string());
         } else {
             panic!("Expected ParseError for 'end' without 'while'");
         }

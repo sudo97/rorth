@@ -5,10 +5,11 @@ pub enum Error {
         pos: usize,
         line: usize,
     },
-    ParseError {
+    Parse {
         word: String,
         pos: usize,
         line: usize,
+        comment: String,
     },
     StackEmpty {
         pos: usize,
