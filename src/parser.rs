@@ -4,7 +4,7 @@ use crate::tokenizer::{Token, TokenType};
 use crate::stack_machine::Program;
 
 #[derive(Debug, PartialEq, Eq)]
-pub enum Instruction {
+pub enum InstructionType {
     Push(i32),
     Pop,
     Add,
@@ -14,17 +14,52 @@ pub enum Instruction {
     Print,
 }
 
+#[derive(Debug, PartialEq, Eq)]
+pub struct Instruction {
+    pub instruction_type: InstructionType,
+    pub pos: usize,
+    pub line: usize,
+}
+
 pub fn parse(tokens: Vec<Token>) -> Result<Program, common::Error> {
     let mut instructions = Vec::new();
     for token in tokens {
         match token.token_type {
-            TokenType::Num(n) => instructions.push(Instruction::Push(n)),
-            TokenType::Add => instructions.push(Instruction::Add),
-            TokenType::Sub => instructions.push(Instruction::Sub),
-            TokenType::Mul => instructions.push(Instruction::Mul),
-            TokenType::Div => instructions.push(Instruction::Div),
-            TokenType::Print => instructions.push(Instruction::Print),
-            TokenType::Pop => instructions.push(Instruction::Pop),
+            TokenType::Num(n) => instructions.push(Instruction {
+                instruction_type: InstructionType::Push(n),
+                pos: token.pos,
+                line: token.line,
+            }),
+            TokenType::Add => instructions.push(Instruction {
+                instruction_type: InstructionType::Add,
+                pos: token.pos,
+                line: token.line,
+            }),
+            TokenType::Sub => instructions.push(Instruction {
+                instruction_type: InstructionType::Sub,
+                pos: token.pos,
+                line: token.line,
+            }),
+            TokenType::Mul => instructions.push(Instruction {
+                instruction_type: InstructionType::Mul,
+                pos: token.pos,
+                line: token.line,
+            }),
+            TokenType::Div => instructions.push(Instruction {
+                instruction_type: InstructionType::Div,
+                pos: token.pos,
+                line: token.line,
+            }),
+            TokenType::Print => instructions.push(Instruction {
+                instruction_type: InstructionType::Print,
+                pos: token.pos,
+                line: token.line,
+            }),
+            TokenType::Pop => instructions.push(Instruction {
+                instruction_type: InstructionType::Pop,
+                pos: token.pos,
+                line: token.line,
+            }),
         }
     }
     Ok(Program(instructions))
@@ -44,7 +79,14 @@ mod parser_test {
             line: 1,
         }];
         let program = parse(tokens).unwrap();
-        assert_eq!(program.0, vec![Instruction::Push(10)]);
+        assert_eq!(
+            program.0,
+            vec![Instruction {
+                instruction_type: InstructionType::Push(10),
+                pos: 1,
+                line: 1,
+            }]
+        );
     }
 
     #[test]
@@ -55,7 +97,14 @@ mod parser_test {
             line: 1,
         }];
         let program = parse(tokens).unwrap();
-        assert_eq!(program.0, vec![Instruction::Add]);
+        assert_eq!(
+            program.0,
+            vec![Instruction {
+                instruction_type: InstructionType::Add,
+                pos: 1,
+                line: 1,
+            }]
+        );
     }
 
     #[test]
@@ -66,7 +115,14 @@ mod parser_test {
             line: 1,
         }];
         let program = parse(tokens).unwrap();
-        assert_eq!(program.0, vec![Instruction::Sub]);
+        assert_eq!(
+            program.0,
+            vec![Instruction {
+                instruction_type: InstructionType::Sub,
+                pos: 1,
+                line: 1,
+            }]
+        );
     }
 
     #[test]
@@ -77,7 +133,14 @@ mod parser_test {
             line: 1,
         }];
         let program = parse(tokens).unwrap();
-        assert_eq!(program.0, vec![Instruction::Mul]);
+        assert_eq!(
+            program.0,
+            vec![Instruction {
+                instruction_type: InstructionType::Mul,
+                pos: 1,
+                line: 1,
+            }]
+        );
     }
 
     #[test]
@@ -88,7 +151,14 @@ mod parser_test {
             line: 1,
         }];
         let program = parse(tokens).unwrap();
-        assert_eq!(program.0, vec![Instruction::Div]);
+        assert_eq!(
+            program.0,
+            vec![Instruction {
+                instruction_type: InstructionType::Div,
+                pos: 1,
+                line: 1,
+            }]
+        );
     }
 
     #[test]
@@ -99,7 +169,14 @@ mod parser_test {
             line: 1,
         }];
         let program = parse(tokens).unwrap();
-        assert_eq!(program.0, vec![Instruction::Print]);
+        assert_eq!(
+            program.0,
+            vec![Instruction {
+                instruction_type: InstructionType::Print,
+                pos: 1,
+                line: 1,
+            }]
+        );
     }
 
     #[test]
@@ -110,6 +187,13 @@ mod parser_test {
             line: 1,
         }];
         let program = parse(tokens).unwrap();
-        assert_eq!(program.0, vec![Instruction::Pop]);
+        assert_eq!(
+            program.0,
+            vec![Instruction {
+                instruction_type: InstructionType::Pop,
+                pos: 1,
+                line: 1,
+            }]
+        );
     }
 }

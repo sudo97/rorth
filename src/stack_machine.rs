@@ -1,4 +1,7 @@
-use crate::{parser::Instruction, stack::Stack};
+use crate::{
+    parser::{Instruction, InstructionType},
+    stack::Stack,
+};
 
 pub struct Program(pub Vec<Instruction>);
 
@@ -8,9 +11,9 @@ impl Program {
         let mut idx = 0;
         while idx < self.0.len() {
             let instruction = &self.0[idx];
-            use Instruction::*;
-            match instruction {
-                Push(n) => stack.push(*n),
+            use InstructionType::*;
+            match instruction.instruction_type {
+                Push(n) => stack.push(n),
                 Pop => {
                     stack.pop()?;
                 }
@@ -54,10 +57,26 @@ mod test_stack_machine {
     #[test]
     fn test_execute() {
         let program = Program(vec![
-            Instruction::Push(1),
-            Instruction::Push(2),
-            Instruction::Add,
-            Instruction::Print,
+            Instruction {
+                instruction_type: InstructionType::Push(1),
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Push(2),
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Add,
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Print,
+                pos: 1,
+                line: 1,
+            },
         ]);
         let mut stack = VecStack::new();
         let result = program.execute(&mut stack);
@@ -67,10 +86,26 @@ mod test_stack_machine {
     #[test]
     fn pop_pops() {
         let program = Program(vec![
-            Instruction::Push(1),
-            Instruction::Push(2),
-            Instruction::Pop,
-            Instruction::Print,
+            Instruction {
+                instruction_type: InstructionType::Push(1),
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Push(2),
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Pop,
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Print,
+                pos: 1,
+                line: 1,
+            },
         ]);
         let mut stack = VecStack::new();
         let result = program.execute(&mut stack);
@@ -80,10 +115,26 @@ mod test_stack_machine {
     #[test]
     fn sub_two_numbers() {
         let program = Program(vec![
-            Instruction::Push(2),
-            Instruction::Push(1),
-            Instruction::Sub,
-            Instruction::Print,
+            Instruction {
+                instruction_type: InstructionType::Push(2),
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Push(1),
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Sub,
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Print,
+                pos: 1,
+                line: 1,
+            },
         ]);
         let mut stack = VecStack::new();
         let result = program.execute(&mut stack);
@@ -95,10 +146,26 @@ mod test_stack_machine {
         let a = 3;
         let b = 2;
         let program = Program(vec![
-            Instruction::Push(a),
-            Instruction::Push(b),
-            Instruction::Mul,
-            Instruction::Print,
+            Instruction {
+                instruction_type: InstructionType::Push(a),
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Push(b),
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Mul,
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Print,
+                pos: 1,
+                line: 1,
+            },
         ]);
         let mut stack = VecStack::new();
         let result = program.execute(&mut stack);
@@ -110,10 +177,26 @@ mod test_stack_machine {
         let a = 3;
         let b = 2;
         let program = Program(vec![
-            Instruction::Push(a),
-            Instruction::Push(b),
-            Instruction::Div,
-            Instruction::Print,
+            Instruction {
+                instruction_type: InstructionType::Push(a),
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Push(b),
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Div,
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Print,
+                pos: 1,
+                line: 1,
+            },
         ]);
         let mut stack = VecStack::new();
         let result = program.execute(&mut stack);
