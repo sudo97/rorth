@@ -1,7 +1,7 @@
 use crate::common;
 
 #[derive(PartialEq, Eq, Debug)]
-pub enum Token {
+pub enum TokenType {
     Num(i32),
     Pop,
     Add,
@@ -9,6 +9,13 @@ pub enum Token {
     Mul,
     Div,
     Print,
+}
+
+#[derive(PartialEq, Eq, Debug)]
+pub struct Token {
+    pub token_type: TokenType,
+    pub pos: usize,
+    pub line: usize,
 }
 
 pub fn tokenize(input: &str) -> Result<Vec<Token>, common::Error> {
@@ -20,6 +27,7 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, common::Error> {
     let chars: Vec<char> = input.chars().collect();
 
     while let Some(c) = chars.get(idx) {
+        use TokenType::*;
         pos += 1;
         match c {
             ' ' => {}
@@ -32,16 +40,32 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, common::Error> {
             }
             '\t' => {}
             '+' => {
-                tokens.push(Token::Add);
+                tokens.push(Token {
+                    token_type: Add,
+                    pos,
+                    line,
+                });
             }
             '-' => {
-                tokens.push(Token::Sub);
+                tokens.push(Token {
+                    token_type: Sub,
+                    pos,
+                    line,
+                });
             }
             '*' => {
-                tokens.push(Token::Mul);
+                tokens.push(Token {
+                    token_type: Mul,
+                    pos,
+                    line,
+                });
             }
             '/' => {
-                tokens.push(Token::Div);
+                tokens.push(Token {
+                    token_type: Div,
+                    pos,
+                    line,
+                });
             }
             c if c.is_numeric() => {
                 let mut buf = String::new();
@@ -55,7 +79,11 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, common::Error> {
                         break;
                     }
                 }
-                tokens.push(Token::Num(buf.parse::<i32>().unwrap()));
+                tokens.push(Token {
+                    token_type: Num(buf.parse::<i32>().unwrap()),
+                    pos: pos - buf.len() + 1,
+                    line,
+                });
             }
             c if c.is_ascii_alphanumeric() || *c == '_' => {
                 let mut buf = String::new();
@@ -70,9 +98,17 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, common::Error> {
                     }
                 }
                 if buf == "print" {
-                    tokens.push(Token::Print);
+                    tokens.push(Token {
+                        token_type: Print,
+                        pos: pos - buf.len() + 1,
+                        line,
+                    });
                 } else if buf == "pop" {
-                    tokens.push(Token::Pop);
+                    tokens.push(Token {
+                        token_type: Pop,
+                        pos: pos - buf.len() + 1,
+                        line,
+                    });
                 } else {
                     let len = buf.len();
                     return Err(common::Error::UnknownToken {
@@ -125,42 +161,122 @@ mod tokenizer_tests {
     fn single_number() {
         let input = "3";
         let tokens = tokenize(input);
-        assert_eq!(tokens, Ok(vec![Token::Num(3)]));
+        assert_eq!(
+            tokens,
+            Ok(vec![Token {
+                token_type: TokenType::Num(3),
+                pos: 1,
+                line: 1,
+            }])
+        );
     }
 
     #[test]
     fn multiple_digits() {
         let input = "123";
         let tokens = tokenize(input);
-        assert_eq!(tokens, Ok(vec![Token::Num(123)]));
+        assert_eq!(
+            tokens,
+            Ok(vec![Token {
+                token_type: TokenType::Num(123),
+                pos: 1,
+                line: 1,
+            }])
+        );
     }
 
     #[test]
     fn multiple_digits_and_print() {
         let input = "123 print";
         let tokens = tokenize(input);
-        assert_eq!(tokens, Ok(vec![Token::Num(123), Token::Print]));
+        assert_eq!(
+            tokens,
+            Ok(vec![
+                Token {
+                    token_type: TokenType::Num(123),
+                    pos: 1,
+                    line: 1,
+                },
+                Token {
+                    token_type: TokenType::Print,
+                    pos: 5,
+                    line: 1,
+                }
+            ])
+        );
     }
 
     #[test]
     fn multiple_digits_and_print_and_pop() {
         let input = "123 print pop";
         let tokens = tokenize(input);
-        assert_eq!(tokens, Ok(vec![Token::Num(123), Token::Print, Token::Pop]));
+        assert_eq!(
+            tokens,
+            Ok(vec![
+                Token {
+                    token_type: TokenType::Num(123),
+                    pos: 1,
+                    line: 1,
+                },
+                Token {
+                    token_type: TokenType::Print,
+                    pos: 5,
+                    line: 1,
+                },
+                Token {
+                    token_type: TokenType::Pop,
+                    pos: 11,
+                    line: 1,
+                }
+            ])
+        );
     }
 
     #[test]
     fn two_numbers() {
         let input = "3 4";
         let tokens = tokenize(input);
-        assert_eq!(tokens, Ok(vec![Token::Num(3), Token::Num(4)]));
+        assert_eq!(
+            tokens,
+            Ok(vec![
+                Token {
+                    token_type: TokenType::Num(3),
+                    pos: 1,
+                    line: 1,
+                },
+                Token {
+                    token_type: TokenType::Num(4),
+                    pos: 3,
+                    line: 1,
+                }
+            ])
+        );
     }
 
     #[test]
     fn two_plus_two() {
         let input = "2 2 +";
         let tokens = tokenize(input);
-        assert_eq!(tokens, Ok(vec![Token::Num(2), Token::Num(2), Token::Add]));
+        assert_eq!(
+            tokens,
+            Ok(vec![
+                Token {
+                    token_type: TokenType::Num(2),
+                    pos: 1,
+                    line: 1,
+                },
+                Token {
+                    token_type: TokenType::Num(2),
+                    pos: 3,
+                    line: 1,
+                },
+                Token {
+                    token_type: TokenType::Add,
+                    pos: 5,
+                    line: 1,
+                }
+            ])
+        );
     }
 
     #[test]
@@ -170,11 +286,31 @@ mod tokenizer_tests {
         assert_eq!(
             tokens,
             Ok(vec![
-                Token::Num(2),
-                Token::Num(2),
-                Token::Add,
-                Token::Num(3),
-                Token::Sub
+                Token {
+                    token_type: TokenType::Num(2),
+                    pos: 1,
+                    line: 1,
+                },
+                Token {
+                    token_type: TokenType::Num(2),
+                    pos: 3,
+                    line: 1,
+                },
+                Token {
+                    token_type: TokenType::Add,
+                    pos: 5,
+                    line: 1,
+                },
+                Token {
+                    token_type: TokenType::Num(3),
+                    pos: 7,
+                    line: 1,
+                },
+                Token {
+                    token_type: TokenType::Sub,
+                    pos: 9,
+                    line: 1,
+                }
             ])
         );
     }
@@ -186,13 +322,41 @@ mod tokenizer_tests {
         assert_eq!(
             tokens,
             Ok(vec![
-                Token::Num(2),
-                Token::Num(2),
-                Token::Add,
-                Token::Num(3),
-                Token::Sub,
-                Token::Num(4),
-                Token::Mul
+                Token {
+                    token_type: TokenType::Num(2),
+                    pos: 1,
+                    line: 1,
+                },
+                Token {
+                    token_type: TokenType::Num(2),
+                    pos: 3,
+                    line: 1,
+                },
+                Token {
+                    token_type: TokenType::Add,
+                    pos: 5,
+                    line: 1,
+                },
+                Token {
+                    token_type: TokenType::Num(3),
+                    pos: 7,
+                    line: 1,
+                },
+                Token {
+                    token_type: TokenType::Sub,
+                    pos: 9,
+                    line: 1,
+                },
+                Token {
+                    token_type: TokenType::Num(4),
+                    pos: 11,
+                    line: 1,
+                },
+                Token {
+                    token_type: TokenType::Mul,
+                    pos: 13,
+                    line: 1,
+                }
             ])
         );
     }
@@ -204,15 +368,51 @@ mod tokenizer_tests {
         assert_eq!(
             tokens,
             Ok(vec![
-                Token::Num(2),
-                Token::Num(2),
-                Token::Add,
-                Token::Num(3),
-                Token::Sub,
-                Token::Num(4),
-                Token::Mul,
-                Token::Num(5),
-                Token::Div
+                Token {
+                    token_type: TokenType::Num(2),
+                    pos: 1,
+                    line: 1,
+                },
+                Token {
+                    token_type: TokenType::Num(2),
+                    pos: 3,
+                    line: 1,
+                },
+                Token {
+                    token_type: TokenType::Add,
+                    pos: 5,
+                    line: 1,
+                },
+                Token {
+                    token_type: TokenType::Num(3),
+                    pos: 7,
+                    line: 1,
+                },
+                Token {
+                    token_type: TokenType::Sub,
+                    pos: 9,
+                    line: 1,
+                },
+                Token {
+                    token_type: TokenType::Num(4),
+                    pos: 11,
+                    line: 1,
+                },
+                Token {
+                    token_type: TokenType::Mul,
+                    pos: 13,
+                    line: 1,
+                },
+                Token {
+                    token_type: TokenType::Num(5),
+                    pos: 15,
+                    line: 1,
+                },
+                Token {
+                    token_type: TokenType::Div,
+                    pos: 17,
+                    line: 1,
+                }
             ])
         );
     }

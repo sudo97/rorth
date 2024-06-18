@@ -14,11 +14,8 @@ fn main() -> Result<(), Error> {
     let input = &args[1];
     let input = std::fs::read_to_string(input).expect("Failed to read file");
     let tokens = tokenize(&input)?;
-    if let Some(p) = parse(tokens) {
-        let result = p.execute(&mut VecStack::new());
-        println!("Result: {:?}", result);
-    } else {
-        println!("Failed to parse");
-    }
+    let program = parse(tokens)?;
+    let result = program.execute(&mut VecStack::new());
+    println!("Result: {:?}", result);
     Ok(())
 }

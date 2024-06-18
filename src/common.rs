@@ -5,4 +5,9 @@ pub enum Error {
         pos: usize,
         line: usize,
     },
+    // ParseError {
+    //     word: String,
+    //     pos: usize,
+    //     line: usize,
+    // },
 }
