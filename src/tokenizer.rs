@@ -9,6 +9,9 @@ pub enum TokenType {
     Mul,
     Div,
     Print,
+    While,
+    End,
+    Dup, // TODO: If, Then, Else, EndIf, While, EndWhile
 }
 
 #[derive(PartialEq, Eq, Debug)]
@@ -22,6 +25,9 @@ fn identifier(input: &str) -> Option<TokenType> {
     match input {
         "print" => Some(TokenType::Print),
         "pop" => Some(TokenType::Pop),
+        "while" => Some(TokenType::While),
+        "end" => Some(TokenType::End),
+        "dup" => Some(TokenType::Dup),
         _ => None,
     }
 }
@@ -491,6 +497,41 @@ mod tokenizer_tests {
             })
         );
     }
+
+    #[test]
+    fn while_end() {
+        let input = "while end";
+        let tokens = tokenize(input);
+        assert_eq!(
+            tokens,
+            Ok(vec![
+                Token {
+                    token_type: TokenType::While,
+                    pos: 1,
+                    line: 1
+                },
+                Token {
+                    token_type: TokenType::End,
+                    pos: 7,
+                    line: 1
+                }
+            ])
+        )
+    }
+
+    #[test]
+    fn dup() {
+        let input = "dup";
+        let tokens = tokenize(input);
+        assert_eq!(
+            tokens,
+            Ok(vec![Token {
+                token_type: TokenType::Dup,
+                pos: 1,
+                line: 1
+            }])
+        );
+    }
 }
 
 #[cfg(test)]
@@ -510,5 +551,20 @@ mod test_identifier {
     #[test]
     fn test_pop() {
         assert_eq!(identifier("pop"), Some(TokenType::Pop));
+    }
+
+    #[test]
+    fn test_while() {
+        assert_eq!(identifier("while"), Some(TokenType::While))
+    }
+
+    #[test]
+    fn test_end() {
+        assert_eq!(identifier("end"), Some(TokenType::End))
+    }
+
+    #[test]
+    fn test_dup() {
+        assert_eq!(identifier("dup"), Some(TokenType::Dup))
     }
 }

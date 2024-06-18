@@ -66,11 +66,37 @@ impl Program {
                     stack.push(b / a);
                 }
                 Print => {
-                    let n = stack.peek().ok_or(Error::StackEmpty {
+                    let n = stack.pop().ok_or(Error::StackEmpty {
                         pos: instruction.pos,
                         line: instruction.line,
                     })?;
-                    result.push(*n);
+                    result.push(n);
+                }
+                While(jmp_pos) => {
+                    let val = stack.peek().ok_or(Error::StackEmpty {
+                        pos: instruction.pos,
+                        line: instruction.line,
+                    })?;
+                    if *val == 0 {
+                        idx = jmp_pos;
+                    }
+                }
+                End(jmp_pos) => {
+                    let val = stack.peek().ok_or(Error::StackEmpty {
+                        pos: instruction.pos,
+                        line: instruction.line,
+                    })?;
+                    if *val != 0 {
+                        idx = jmp_pos;
+                    }
+                }
+                Dup => {
+                    let n = stack.pop().ok_or(Error::StackEmpty {
+                        pos: instruction.pos,
+                        line: instruction.line,
+                    })?;
+                    stack.push(n);
+                    stack.push(n);
                 }
             }
             idx += 1;
@@ -232,5 +258,81 @@ mod test_stack_machine {
         let mut stack = VecStack::new();
         let result = program.execute(&mut stack);
         assert_eq!(result, Ok(vec![a / b]));
+    }
+
+    #[test]
+    fn while_loop() {
+        let line = 1;
+        let pos = 1;
+        let program = Program(vec![
+            Instruction {
+                instruction_type: InstructionType::Push(3),
+                line,
+                pos,
+            },
+            Instruction {
+                instruction_type: InstructionType::While(7),
+                line,
+                pos,
+            },
+            Instruction {
+                instruction_type: InstructionType::Push(5),
+                line,
+                pos,
+            },
+            Instruction {
+                instruction_type: InstructionType::Print,
+                line,
+                pos,
+            },
+            Instruction {
+                instruction_type: InstructionType::Push(1),
+                line,
+                pos,
+            },
+            Instruction {
+                instruction_type: InstructionType::Sub,
+                line,
+                pos,
+            },
+            Instruction {
+                instruction_type: InstructionType::End(1),
+                line,
+                pos,
+            },
+        ]);
+
+        let mut stack = VecStack::new();
+        let result = program.execute(&mut stack);
+        assert_eq!(result, Ok(vec![5, 5, 5]));
+    }
+
+    #[test]
+    fn dup_print_print() {
+        let program = Program(vec![
+            Instruction {
+                instruction_type: InstructionType::Push(3),
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Dup,
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Print,
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Print,
+                pos: 1,
+                line: 1,
+            },
+        ]);
+        let mut stack = VecStack::new();
+        let result = program.execute(&mut stack);
+        assert_eq!(result, Ok(vec![3, 3]));
     }
 }
