@@ -18,6 +18,39 @@ pub struct Token {
     pub line: usize,
 }
 
+fn identifier(input: &str) -> Option<TokenType> {
+    match input {
+        "print" => Some(TokenType::Print),
+        "pop" => Some(TokenType::Pop),
+        _ => None,
+    }
+}
+
+fn is_identifier_char(c: &char) -> bool {
+    c.is_ascii_alphanumeric() || *c == '_'
+}
+
+fn is_numeric_char(c: &char) -> bool {
+    c.is_numeric()
+}
+
+macro_rules! collect_while {
+    ($idx:expr, $pos:expr, $chars:expr, $cond:expr) => {{
+        let mut buf = String::new();
+        buf.push(*$chars.get($idx).unwrap());
+        while let Some(c) = $chars.get($idx + 1) {
+            if $cond(c) {
+                buf.push(*c);
+                $idx += 1;
+                $pos += 1;
+            } else {
+                break;
+            }
+        }
+        buf
+    }};
+}
+
 pub fn tokenize(input: &str) -> Result<Vec<Token>, common::Error> {
     let mut tokens = Vec::new();
 
@@ -67,56 +100,28 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, common::Error> {
                     line,
                 });
             }
-            c if c.is_numeric() => {
-                let mut buf = String::new();
-                buf.push(*c);
-                while let Some(c) = chars.get(idx + 1) {
-                    if c.is_numeric() {
-                        buf.push(*c);
-                        idx += 1;
-                        pos += 1;
-                    } else {
-                        break;
-                    }
-                }
+            c if is_numeric_char(c) => {
+                let buf = collect_while!(idx, pos, chars, is_numeric_char);
                 tokens.push(Token {
                     token_type: Num(buf.parse::<i32>().unwrap()),
                     pos: pos - buf.len() + 1,
                     line,
                 });
             }
-            c if c.is_ascii_alphanumeric() || *c == '_' => {
-                let mut buf = String::new();
-                buf.push(*c);
-                while let Some(c) = chars.get(idx + 1) {
-                    if c.is_ascii_alphanumeric() || *c == '_' {
-                        buf.push(*c);
-                        idx += 1;
-                        pos += 1;
-                    } else {
-                        break;
-                    }
-                }
-                if buf == "print" {
-                    tokens.push(Token {
-                        token_type: Print,
-                        pos: pos - buf.len() + 1,
-                        line,
-                    });
-                } else if buf == "pop" {
-                    tokens.push(Token {
-                        token_type: Pop,
-                        pos: pos - buf.len() + 1,
-                        line,
-                    });
-                } else {
-                    let len = buf.len();
-                    return Err(common::Error::UnknownToken {
-                        word: buf,
-                        pos: pos - len + 1,
-                        line,
-                    });
-                }
+            c if is_identifier_char(c) => {
+                let buf = collect_while!(idx, pos, chars, is_identifier_char);
+                let tok_begin_pos = pos - buf.len() + 1;
+                let token_type = identifier(&buf).ok_or(common::Error::UnknownToken {
+                    word: buf,
+                    pos: tok_begin_pos,
+                    line,
+                })?;
+
+                tokens.push(Token {
+                    token_type,
+                    pos: tok_begin_pos,
+                    line,
+                });
             }
             _ => {
                 return Err(common::Error::UnknownToken {
@@ -485,5 +490,25 @@ mod tokenizer_tests {
                 line: 1
             })
         );
+    }
+}
+
+#[cfg(test)]
+mod test_identifier {
+    use super::*;
+
+    #[test]
+    fn test_identifier() {
+        assert_eq!(identifier("print"), Some(TokenType::Print));
+    }
+
+    #[test]
+    fn test_identifier_not_found() {
+        assert_eq!(identifier("unknown"), None);
+    }
+
+    #[test]
+    fn test_pop() {
+        assert_eq!(identifier("pop"), Some(TokenType::Pop));
     }
 }
