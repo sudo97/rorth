@@ -16,30 +16,60 @@ impl Program {
             match instruction.instruction_type {
                 Push(n) => stack.push(n),
                 Pop => {
-                    stack.pop()?;
+                    stack.pop().ok_or(Error::StackEmpty {
+                        pos: instruction.pos,
+                        line: instruction.line,
+                    })?;
                 }
                 Add => {
-                    let a = stack.pop()?;
-                    let b = stack.pop()?;
+                    let a = stack.pop().ok_or(Error::StackEmpty {
+                        pos: instruction.pos,
+                        line: instruction.line,
+                    })?;
+                    let b = stack.pop().ok_or(Error::StackEmpty {
+                        pos: instruction.pos,
+                        line: instruction.line,
+                    })?;
                     stack.push(a + b);
                 }
                 Sub => {
-                    let a = stack.pop()?;
-                    let b = stack.pop()?;
+                    let a = stack.pop().ok_or(Error::StackEmpty {
+                        pos: instruction.pos,
+                        line: instruction.line,
+                    })?;
+                    let b = stack.pop().ok_or(Error::StackEmpty {
+                        pos: instruction.pos,
+                        line: instruction.line,
+                    })?;
                     stack.push(b - a);
                 }
                 Mul => {
-                    let a = stack.pop()?;
-                    let b = stack.pop()?;
+                    let a = stack.pop().ok_or(Error::StackEmpty {
+                        pos: instruction.pos,
+                        line: instruction.line,
+                    })?;
+                    let b = stack.pop().ok_or(Error::StackEmpty {
+                        pos: instruction.pos,
+                        line: instruction.line,
+                    })?;
                     stack.push(a * b);
                 }
                 Div => {
-                    let a = stack.pop()?;
-                    let b = stack.pop()?;
+                    let a = stack.pop().ok_or(Error::StackEmpty {
+                        pos: instruction.pos,
+                        line: instruction.line,
+                    })?;
+                    let b = stack.pop().ok_or(Error::StackEmpty {
+                        pos: instruction.pos,
+                        line: instruction.line,
+                    })?;
                     stack.push(b / a);
                 }
                 Print => {
-                    let n = stack.peek()?;
+                    let n = stack.peek().ok_or(Error::StackEmpty {
+                        pos: instruction.pos,
+                        line: instruction.line,
+                    })?;
                     result.push(*n);
                 }
             }
