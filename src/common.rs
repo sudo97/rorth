@@ -10,4 +10,8 @@ pub enum Error {
     //     pos: usize,
     //     line: usize,
     // },
+    StackEmpty {
+        pos: usize,
+        line: usize,
+    },
 }

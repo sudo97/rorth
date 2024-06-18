@@ -1,4 +1,5 @@
 use crate::{
+    common::Error,
     parser::{Instruction, InstructionType},
     stack::Stack,
 };
@@ -6,7 +7,7 @@ use crate::{
 pub struct Program(pub Vec<Instruction>);
 
 impl Program {
-    pub fn execute<T: Stack<i32>>(&self, stack: &mut T) -> Option<Vec<i32>> {
+    pub fn execute<T: Stack<i32>>(&self, stack: &mut T) -> Result<Vec<i32>, Error> {
         let mut result = vec![];
         let mut idx = 0;
         while idx < self.0.len() {
@@ -44,7 +45,7 @@ impl Program {
             }
             idx += 1;
         }
-        Some(result)
+        Ok(result)
     }
 }
 
@@ -80,7 +81,7 @@ mod test_stack_machine {
         ]);
         let mut stack = VecStack::new();
         let result = program.execute(&mut stack);
-        assert_eq!(result, Some(vec![3]));
+        assert_eq!(result, Ok(vec![3]));
     }
 
     #[test]
@@ -109,7 +110,7 @@ mod test_stack_machine {
         ]);
         let mut stack = VecStack::new();
         let result = program.execute(&mut stack);
-        assert_eq!(result, Some(vec![1]));
+        assert_eq!(result, Ok(vec![1]));
     }
 
     #[test]
@@ -138,7 +139,7 @@ mod test_stack_machine {
         ]);
         let mut stack = VecStack::new();
         let result = program.execute(&mut stack);
-        assert_eq!(result, Some(vec![1]));
+        assert_eq!(result, Ok(vec![1]));
     }
 
     #[test]
@@ -169,7 +170,7 @@ mod test_stack_machine {
         ]);
         let mut stack = VecStack::new();
         let result = program.execute(&mut stack);
-        assert_eq!(result, Some(vec![a * b]));
+        assert_eq!(result, Ok(vec![a * b]));
     }
 
     #[test]
@@ -200,6 +201,6 @@ mod test_stack_machine {
         ]);
         let mut stack = VecStack::new();
         let result = program.execute(&mut stack);
-        assert_eq!(result, Some(vec![a / b]));
+        assert_eq!(result, Ok(vec![a / b]));
     }
 }
