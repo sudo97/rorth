@@ -49,6 +49,9 @@ fn is_numeric_char(c: &char) -> bool {
     c.is_numeric()
 }
 
+fn is_not_newline(c: &char) -> bool {
+    *c != '\n'
+}
 macro_rules! collect_while {
     ($idx:expr, $pos:expr, $chars:expr, $cond:expr) => {{
         let mut buf = String::new();
@@ -116,7 +119,7 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, common::Error> {
                 });
             }
             '#' => {
-                collect_while!(idx, pos, chars, |c: &char| *c != '\n');
+                collect_while!(idx, pos, chars, is_not_newline);
                 idx += 1;
                 pos = 0;
                 line += 1;
