@@ -115,6 +115,12 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, common::Error> {
                     line,
                 });
             }
+            '#' => {
+                collect_while!(idx, pos, chars, |c: &char| *c != '\n');
+                idx += 1;
+                pos = 0;
+                line += 1;
+            }
             c if is_numeric_char(c) => {
                 let buf = collect_while!(idx, pos, chars, is_numeric_char);
                 tokens.push(Token {
@@ -538,6 +544,27 @@ mod tokenizer_tests {
                 token_type: TokenType::Dup,
                 pos: 1,
                 line: 1
+            }])
+        );
+    }
+
+    #[test]
+    fn test_only_comment() {
+        let input = "# This is a comment";
+        let tokens = tokenize(input);
+        assert_eq!(tokens, Ok(vec![]));
+    }
+
+    #[test]
+    fn test_comment_plus() {
+        let input = "# This is a comment\n+";
+        let tokens = tokenize(input);
+        assert_eq!(
+            tokens,
+            Ok(vec![Token {
+                token_type: TokenType::Add,
+                pos: 1,
+                line: 2,
             }])
         );
     }
