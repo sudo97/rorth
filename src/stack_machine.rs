@@ -11,6 +11,7 @@ impl Program {
         let mut result = vec![];
         let mut idx = 0;
         while idx < self.0.len() {
+            // stack.print();
             let instruction = &self.0[idx];
             use InstructionType::*;
             match instruction.instruction_type {

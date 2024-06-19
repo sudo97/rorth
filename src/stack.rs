@@ -1,9 +1,10 @@
-pub trait Stack<T> {
+pub trait Stack<T: std::fmt::Debug> {
     fn push(&mut self, item: T);
     fn pop(&mut self) -> Option<T>;
     fn peek(&self) -> Option<&T>;
     fn is_empty(&self) -> bool;
     fn size(&self) -> usize;
+    fn print(&self);
 }
 
 pub struct VecStack<T> {
@@ -16,7 +17,7 @@ impl<T> VecStack<T> {
     }
 }
 
-impl<T> Stack<T> for VecStack<T> {
+impl<T: std::fmt::Debug> Stack<T> for VecStack<T> {
     fn push(&mut self, item: T) {
         self.vec.push(item);
     }
@@ -35,6 +36,10 @@ impl<T> Stack<T> for VecStack<T> {
 
     fn size(&self) -> usize {
         self.vec.len()
+    }
+
+    fn print(&self) {
+        println!("{:?}", self.vec);
     }
 }
 
