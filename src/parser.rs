@@ -15,6 +15,10 @@ pub enum InstructionType {
     While(usize),
     End(usize),
     Dup,
+    Swap,
+    Rot,
+    Over,
+    Nip,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -89,6 +93,26 @@ pub fn parse(tokens: Vec<Token>) -> Result<Program, common::Error> {
             }
             TokenType::Dup => instructions.push(Instruction {
                 instruction_type: InstructionType::Dup,
+                pos: token.pos,
+                line: token.line,
+            }),
+            TokenType::Swap => instructions.push(Instruction {
+                instruction_type: InstructionType::Swap,
+                pos: token.pos,
+                line: token.line,
+            }),
+            TokenType::Rot => instructions.push(Instruction {
+                instruction_type: InstructionType::Rot,
+                pos: token.pos,
+                line: token.line,
+            }),
+            TokenType::Over => instructions.push(Instruction {
+                instruction_type: InstructionType::Over,
+                pos: token.pos,
+                line: token.line,
+            }),
+            TokenType::Nip => instructions.push(Instruction {
+                instruction_type: InstructionType::Nip,
                 pos: token.pos,
                 line: token.line,
             }),
@@ -406,20 +430,64 @@ mod parser_test {
     }
 
     #[test]
-    fn test_dup() {
-        let tokens = vec![Token {
-            token_type: TokenType::Dup,
-            pos: 1,
-            line: 1,
-        }];
+    fn test_stack_operations() {
+        let tokens = vec![
+            Token {
+                token_type: TokenType::Dup,
+                pos: 1,
+                line: 1,
+            },
+            Token {
+                token_type: TokenType::Swap,
+                pos: 2,
+                line: 1,
+            },
+            Token {
+                token_type: TokenType::Rot,
+                pos: 3,
+                line: 1,
+            },
+            Token {
+                token_type: TokenType::Over,
+                pos: 4,
+                line: 1,
+            },
+            Token {
+                token_type: TokenType::Nip,
+                pos: 5,
+                line: 1,
+            },
+        ];
         let program = parse(tokens).unwrap();
         assert_eq!(
             program.0,
-            vec![Instruction {
-                instruction_type: InstructionType::Dup,
-                pos: 1,
-                line: 1,
-            }]
+            vec![
+                Instruction {
+                    instruction_type: InstructionType::Dup,
+                    pos: 1,
+                    line: 1,
+                },
+                Instruction {
+                    instruction_type: InstructionType::Swap,
+                    pos: 2,
+                    line: 1,
+                },
+                Instruction {
+                    instruction_type: InstructionType::Rot,
+                    pos: 3,
+                    line: 1,
+                },
+                Instruction {
+                    instruction_type: InstructionType::Over,
+                    pos: 4,
+                    line: 1,
+                },
+                Instruction {
+                    instruction_type: InstructionType::Nip,
+                    pos: 5,
+                    line: 1,
+                },
+            ]
         );
     }
 }

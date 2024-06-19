@@ -10,8 +10,13 @@ pub enum TokenType {
     Div,
     Print,
     While,
-    End,
-    Dup, // TODO: If, Then, Else, EndIf, While, EndWhile
+    End, // TODO: If, Then, Else, EndIf, While, EndWhile
+    // Stack operations
+    Dup,
+    Swap,
+    Rot,
+    Over,
+    Nip,
 }
 
 #[derive(PartialEq, Eq, Debug)]
@@ -28,6 +33,10 @@ fn identifier(input: &str) -> Option<TokenType> {
         "while" => Some(TokenType::While),
         "end" => Some(TokenType::End),
         "dup" => Some(TokenType::Dup),
+        "swap" => Some(TokenType::Swap),
+        "rot" => Some(TokenType::Rot),
+        "over" => Some(TokenType::Over),
+        "nip" => Some(TokenType::Nip),
         _ => None,
     }
 }
@@ -566,5 +575,25 @@ mod test_identifier {
     #[test]
     fn test_dup() {
         assert_eq!(identifier("dup"), Some(TokenType::Dup))
+    }
+
+    #[test]
+    fn test_swap() {
+        assert_eq!(identifier("swap"), Some(TokenType::Swap))
+    }
+
+    #[test]
+    fn test_rot() {
+        assert_eq!(identifier("rot"), Some(TokenType::Rot))
+    }
+
+    #[test]
+    fn test_over() {
+        assert_eq!(identifier("over"), Some(TokenType::Over))
+    }
+
+    #[test]
+    fn test_nip() {
+        assert_eq!(identifier("nip"), Some(TokenType::Nip))
     }
 }

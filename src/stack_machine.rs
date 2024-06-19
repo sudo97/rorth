@@ -98,6 +98,59 @@ impl Program {
                     stack.push(n);
                     stack.push(n);
                 }
+                Swap => {
+                    let a = stack.pop().ok_or(Error::StackEmpty {
+                        pos: instruction.pos,
+                        line: instruction.line,
+                    })?;
+                    let b = stack.pop().ok_or(Error::StackEmpty {
+                        pos: instruction.pos,
+                        line: instruction.line,
+                    })?;
+                    stack.push(a);
+                    stack.push(b);
+                }
+                Rot => {
+                    let a = stack.pop().ok_or(Error::StackEmpty {
+                        pos: instruction.pos,
+                        line: instruction.line,
+                    })?;
+                    let b = stack.pop().ok_or(Error::StackEmpty {
+                        pos: instruction.pos,
+                        line: instruction.line,
+                    })?;
+                    let c = stack.pop().ok_or(Error::StackEmpty {
+                        pos: instruction.pos,
+                        line: instruction.line,
+                    })?;
+                    stack.push(b);
+                    stack.push(a);
+                    stack.push(c);
+                }
+                Over => {
+                    let a = stack.pop().ok_or(Error::StackEmpty {
+                        pos: instruction.pos,
+                        line: instruction.line,
+                    })?;
+                    let b = stack.pop().ok_or(Error::StackEmpty {
+                        pos: instruction.pos,
+                        line: instruction.line,
+                    })?;
+                    stack.push(b);
+                    stack.push(a);
+                    stack.push(b);
+                }
+                Nip => {
+                    let a = stack.pop().ok_or(Error::StackEmpty {
+                        pos: instruction.pos,
+                        line: instruction.line,
+                    })?;
+                    stack.pop().ok_or(Error::StackEmpty {
+                        pos: instruction.pos,
+                        line: instruction.line,
+                    })?;
+                    stack.push(a);
+                }
             }
             idx += 1;
         }
@@ -334,5 +387,161 @@ mod test_stack_machine {
         let mut stack = VecStack::new();
         let result = program.execute(&mut stack);
         assert_eq!(result, Ok(vec![3, 3]));
+    }
+
+    #[test]
+    fn swap_operation() {
+        let program = Program(vec![
+            Instruction {
+                instruction_type: InstructionType::Push(1),
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Push(2),
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Swap,
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Print,
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Print,
+                pos: 1,
+                line: 1,
+            },
+        ]);
+        let mut stack = VecStack::new();
+        let result = program.execute(&mut stack);
+        assert_eq!(result, Ok(vec![1, 2]));
+    }
+
+    #[test]
+    fn rot_operation() {
+        let program = Program(vec![
+            Instruction {
+                instruction_type: InstructionType::Push(1),
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Push(2),
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Push(3),
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Rot,
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Print,
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Print,
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Print,
+                pos: 1,
+                line: 1,
+            },
+        ]);
+        let mut stack = VecStack::new();
+        let result = program.execute(&mut stack);
+        assert_eq!(result, Ok(vec![1, 3, 2]));
+    }
+
+    #[test]
+    fn over_operation() {
+        let program = Program(vec![
+            Instruction {
+                instruction_type: InstructionType::Push(1),
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Push(2),
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Over,
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Print,
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Print,
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Print,
+                pos: 1,
+                line: 1,
+            },
+        ]);
+        let mut stack = VecStack::new();
+        let result = program.execute(&mut stack);
+        assert_eq!(result, Ok(vec![1, 2, 1]));
+    }
+
+    #[test]
+    fn nip_operation() {
+        let program = Program(vec![
+            Instruction {
+                instruction_type: InstructionType::Push(0),
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Push(1),
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Push(2),
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Nip,
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Print,
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Print,
+                pos: 1,
+                line: 1,
+            },
+        ]);
+        let mut stack = VecStack::new();
+        let result = program.execute(&mut stack);
+        assert_eq!(result, Ok(vec![2, 0]));
     }
 }
