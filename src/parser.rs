@@ -128,7 +128,7 @@ pub fn parse(tokens: Vec<Token>) -> Result<Program, common::Error> {
             comment: "This `while` has no matching end".to_string(),
         })
     } else {
-        Ok(Program(instructions))
+        Ok(instructions)
     }
 }
 
@@ -147,7 +147,7 @@ mod parser_test {
         }];
         let program = parse(tokens).unwrap();
         assert_eq!(
-            program.0,
+            program,
             vec![Instruction {
                 instruction_type: InstructionType::Push(10),
                 pos: 1,
@@ -165,7 +165,7 @@ mod parser_test {
         }];
         let program = parse(tokens).unwrap();
         assert_eq!(
-            program.0,
+            program,
             vec![Instruction {
                 instruction_type: InstructionType::Add,
                 pos: 1,
@@ -183,7 +183,7 @@ mod parser_test {
         }];
         let program = parse(tokens).unwrap();
         assert_eq!(
-            program.0,
+            program,
             vec![Instruction {
                 instruction_type: InstructionType::Sub,
                 pos: 1,
@@ -201,7 +201,7 @@ mod parser_test {
         }];
         let program = parse(tokens).unwrap();
         assert_eq!(
-            program.0,
+            program,
             vec![Instruction {
                 instruction_type: InstructionType::Mul,
                 pos: 1,
@@ -219,7 +219,7 @@ mod parser_test {
         }];
         let program = parse(tokens).unwrap();
         assert_eq!(
-            program.0,
+            program,
             vec![Instruction {
                 instruction_type: InstructionType::Div,
                 pos: 1,
@@ -237,7 +237,7 @@ mod parser_test {
         }];
         let program = parse(tokens).unwrap();
         assert_eq!(
-            program.0,
+            program,
             vec![Instruction {
                 instruction_type: InstructionType::Print,
                 pos: 1,
@@ -255,7 +255,7 @@ mod parser_test {
         }];
         let program = parse(tokens).unwrap();
         assert_eq!(
-            program.0,
+            program,
             vec![Instruction {
                 instruction_type: InstructionType::Pop,
                 pos: 1,
@@ -314,7 +314,7 @@ mod parser_test {
         let result = parse(tokens).unwrap();
 
         assert_eq!(
-            result.0,
+            result,
             vec![
                 Instruction {
                     instruction_type: InstructionType::Push(3),
@@ -460,7 +460,7 @@ mod parser_test {
         ];
         let program = parse(tokens).unwrap();
         assert_eq!(
-            program.0,
+            program,
             vec![
                 Instruction {
                     instruction_type: InstructionType::Dup,
