@@ -13,6 +13,95 @@ impl<T: Stack<i32>> StackMachine<T> {
         Self(stack)
     }
 
+    fn push(&mut self, n: i32) {
+        self.0.push(n);
+    }
+
+    fn pop(&mut self, i: &Instruction) -> Result<i32, Error> {
+        let Instruction { pos, line, .. } = i;
+        self.0.pop().ok_or(Error::StackEmpty {
+            pos: *pos,
+            line: *line,
+        })
+    }
+
+    fn peek(&mut self, i: &Instruction) -> Result<&i32, Error> {
+        let Instruction { pos, line, .. } = i;
+        self.0.peek().ok_or(Error::StackEmpty {
+            pos: *pos,
+            line: *line,
+        })
+    }
+
+    fn add(&mut self, i: &Instruction) -> Result<(), Error> {
+        let a = self.pop(i)?;
+        let b = self.pop(i)?;
+        self.0.push(a + b);
+        Ok(())
+    }
+
+    fn sub(&mut self, i: &Instruction) -> Result<(), Error> {
+        let a = self.pop(i)?;
+        let b = self.pop(i)?;
+        self.0.push(b - a);
+        Ok(())
+    }
+
+    fn mul(&mut self, i: &Instruction) -> Result<(), Error> {
+        let a = self.pop(i)?;
+        let b = self.pop(i)?;
+        self.0.push(a * b);
+        Ok(())
+    }
+
+    fn div(&mut self, i: &Instruction) -> Result<(), Error> {
+        let a = self.pop(i)?;
+        let b = self.pop(i)?;
+        self.0.push(b / a);
+        Ok(())
+    }
+
+    fn dup(&mut self, i: &Instruction) -> Result<(), Error> {
+        let n = self.pop(i)?;
+        self.push(n);
+        self.push(n);
+        Ok(())
+    }
+
+    fn swap(&mut self, i: &Instruction) -> Result<(), Error> {
+        let a = self.pop(i)?;
+        let b = self.pop(i)?;
+        self.push(a);
+        self.push(b);
+        Ok(())
+    }
+
+    fn rot(&mut self, i: &Instruction) -> Result<(), Error> {
+        let a = self.pop(i)?;
+        let b = self.pop(i)?;
+        let c = self.pop(i)?;
+        self.push(b);
+        self.push(a);
+        self.push(c);
+        Ok(())
+    }
+
+    fn over(&mut self, i: &Instruction) -> Result<(), Error> {
+        let a = self.pop(i)?;
+        let b = self.pop(i)?;
+        self.push(b);
+        self.push(a);
+        self.push(b);
+        Ok(())
+    }
+
+    fn nip(&mut self, i: &Instruction) -> Result<(), Error> {
+        let x = self.pop(i)?;
+        self.pop(i)?;
+        self.push(x);
+        Ok(())
+    }
+
     pub fn execute(&mut self, program: Vec<Instruction>) -> Result<Vec<i32>, Error> {
         let mut result = vec![];
         let mut idx = 0;
@@ -22,142 +111,51 @@ impl<T: Stack<i32>> StackMachine<T> {
             let instruction = &program[idx];
             use InstructionType::*;
             match instruction.instruction_type {
-                Push(n) => self.0.push(n),
+                Push(n) => self.push(n),
                 Pop => {
-                    self.0.pop().ok_or(Error::StackEmpty {
-                        pos: instruction.pos,
-                        line: instruction.line,
-                    })?;
+                    self.pop(instruction)?;
                 }
                 Add => {
-                    let a = self.0.pop().ok_or(Error::StackEmpty {
-                        pos: instruction.pos,
-                        line: instruction.line,
-                    })?;
-                    let b = self.0.pop().ok_or(Error::StackEmpty {
-                        pos: instruction.pos,
-                        line: instruction.line,
-                    })?;
-                    self.0.push(a + b);
+                    self.add(instruction)?;
                 }
                 Sub => {
-                    let a = self.0.pop().ok_or(Error::StackEmpty {
-                        pos: instruction.pos,
-                        line: instruction.line,
-                    })?;
-                    let b = self.0.pop().ok_or(Error::StackEmpty {
-                        pos: instruction.pos,
-                        line: instruction.line,
-                    })?;
-                    self.0.push(b - a);
+                    self.sub(instruction)?;
                 }
                 Mul => {
-                    let a = self.0.pop().ok_or(Error::StackEmpty {
-                        pos: instruction.pos,
-                        line: instruction.line,
-                    })?;
-                    let b = self.0.pop().ok_or(Error::StackEmpty {
-                        pos: instruction.pos,
-                        line: instruction.line,
-                    })?;
-                    self.0.push(a * b);
+                    self.mul(instruction)?;
                 }
                 Div => {
-                    let a = self.0.pop().ok_or(Error::StackEmpty {
-                        pos: instruction.pos,
-                        line: instruction.line,
-                    })?;
-                    let b = self.0.pop().ok_or(Error::StackEmpty {
-                        pos: instruction.pos,
-                        line: instruction.line,
-                    })?;
-                    self.0.push(b / a);
+                    self.div(instruction)?;
                 }
                 Print => {
-                    let n = self.0.pop().ok_or(Error::StackEmpty {
-                        pos: instruction.pos,
-                        line: instruction.line,
-                    })?;
-                    result.push(n);
+                    result.push(self.pop(instruction)?);
+                }
+                Dup => {
+                    self.dup(instruction)?;
+                }
+                Swap => {
+                    self.swap(instruction)?;
+                }
+                Rot => {
+                    self.rot(instruction)?;
+                }
+                Over => {
+                    self.over(instruction)?;
+                }
+                Nip => {
+                    self.nip(instruction)?;
                 }
                 While(jmp_pos) => {
-                    let val = self.0.peek().ok_or(Error::StackEmpty {
-                        pos: instruction.pos,
-                        line: instruction.line,
-                    })?;
+                    let val = self.peek(instruction)?;
                     if *val == 0 {
                         idx = jmp_pos;
                     }
                 }
                 End(jmp_pos) => {
-                    let val = self.0.peek().ok_or(Error::StackEmpty {
-                        pos: instruction.pos,
-                        line: instruction.line,
-                    })?;
+                    let val = self.peek(instruction)?;
                     if *val != 0 {
                         idx = jmp_pos;
                     }
-                }
-                Dup => {
-                    let n = self.0.pop().ok_or(Error::StackEmpty {
-                        pos: instruction.pos,
-                        line: instruction.line,
-                    })?;
-                    self.0.push(n);
-                    self.0.push(n);
-                }
-                Swap => {
-                    let a = self.0.pop().ok_or(Error::StackEmpty {
-                        pos: instruction.pos,
-                        line: instruction.line,
-                    })?;
-                    let b = self.0.pop().ok_or(Error::StackEmpty {
-                        pos: instruction.pos,
-                        line: instruction.line,
-                    })?;
-                    self.0.push(a);
-                    self.0.push(b);
-                }
-                Rot => {
-                    let a = self.0.pop().ok_or(Error::StackEmpty {
-                        pos: instruction.pos,
-                        line: instruction.line,
-                    })?;
-                    let b = self.0.pop().ok_or(Error::StackEmpty {
-                        pos: instruction.pos,
-                        line: instruction.line,
-                    })?;
-                    let c = self.0.pop().ok_or(Error::StackEmpty {
-                        pos: instruction.pos,
-                        line: instruction.line,
-                    })?;
-                    self.0.push(b);
-                    self.0.push(a);
-                    self.0.push(c);
-                }
-                Over => {
-                    let a = self.0.pop().ok_or(Error::StackEmpty {
-                        pos: instruction.pos,
-                        line: instruction.line,
-                    })?;
-                    let b = self.0.pop().ok_or(Error::StackEmpty {
-                        pos: instruction.pos,
-                        line: instruction.line,
-                    })?;
-                    self.0.push(b);
-                    self.0.push(a);
-                    self.0.push(b);
-                }
-                Nip => {
-                    let a = self.0.pop().ok_or(Error::StackEmpty {
-                        pos: instruction.pos,
-                        line: instruction.line,
-                    })?;
-                    self.0.pop().ok_or(Error::StackEmpty {
-                        pos: instruction.pos,
-                        line: instruction.line,
-                    })?;
-                    self.0.push(a);
                 }
             }
             idx += 1;
@@ -560,5 +558,27 @@ mod test_stack_machine {
         let mut machine = StackMachine::new(stack);
         let result = machine.execute(program);
         assert_eq!(result, Ok(vec![2, 0]));
+    }
+}
+
+#[cfg(test)]
+mod test_basic_operations {
+    use crate::stack::VecStack;
+
+    use super::*;
+
+    #[test]
+    fn test_add() {
+        let stack = VecStack::new();
+        let mut machine = StackMachine::new(stack);
+        machine.push(1);
+        machine.push(2);
+        let _ = machine.add(&Instruction {
+            instruction_type: InstructionType::Add,
+            pos: 1,
+            line: 1,
+        });
+        assert_eq!(*machine.0.peek().unwrap(), 3);
+        assert_eq!(machine.0.size(), 1)
     }
 }
