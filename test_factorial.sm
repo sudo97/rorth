@@ -1,13 +1,12 @@
-5
-dup
-1
--
-while
-  swap
-  over
-  *
-  swap
-  1 -
-end
-pop
-print
+5         # initial value, it's going to be the result              [ 5 ]
+dup       # duplicate to get the counter, we are going to decrement [ 5 5 ]
+1 -       # minus one from the counter                              [ 5 4 ]
+while     # while top is not zero                                   [ 5 4 ] <- at the first iteration
+  swap    # swap the top two elements                               [ 4 5 ] <- at the first iteration
+  over    # duplicate the counter element                           [ 4 5 4 ] <- at the first iteration
+  *       # multiply the counter and the result                     [ 4 20 ] <- at the first iteration
+  swap    # swap to get the counter on top                          [ 20 4 ] <- at the first iteration
+  1 -     # minus one from the counter                              [ 20 3 ] <- at the first iteration
+end       # end the loop                                            [ result 0 ] <- at the end of the loop
+pop       # remove the counter                                      [ result ]
+print     # print the result                                        [ ]
