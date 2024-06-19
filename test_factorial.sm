@@ -1,0 +1,13 @@
+5
+dup
+1
+-
+while
+  swap
+  over
+  *
+  swap
+  1 -
+end
+pop
+print
