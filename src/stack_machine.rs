@@ -157,6 +157,9 @@ impl<T: Stack<i32>> StackMachine<T> {
                         idx = jmp_pos;
                     }
                 }
+                If(_) => todo!(),
+                Else(_) => todo!(),
+                Fi => todo!(),
             }
             idx += 1;
         }

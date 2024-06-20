@@ -16,6 +16,9 @@ pub enum InstructionType {
     Print,
     While(usize),
     End(usize),
+    If(usize),
+    Else(usize),
+    Fi,
     Dup,
     Swap,
     Rot,
@@ -43,6 +46,9 @@ impl Display for InstructionType {
                 InstructionType::Rot => "rot".into(),
                 InstructionType::Over => "over".into(),
                 InstructionType::Nip => "nip".into(),
+                InstructionType::If(_) => "if".into(),
+                InstructionType::Else(_) => "else".into(),
+                InstructionType::Fi => "end".into(),
             }
         )
     }
@@ -64,6 +70,14 @@ impl Instruction {
             }),
             InstructionType::End(_) => Ok(Instruction {
                 instruction_type: InstructionType::End(jmp_pos),
+                ..*self
+            }),
+            InstructionType::If(_) => Ok(Instruction {
+                instruction_type: InstructionType::If(jmp_pos),
+                ..*self
+            }),
+            InstructionType::Else(_) => Ok(Instruction {
+                instruction_type: InstructionType::Else(jmp_pos),
                 ..*self
             }),
             _ => Err(common::Error::Parse {
@@ -133,11 +147,51 @@ pub fn parse(tokens: Vec<Token>) -> Result<Program, common::Error> {
                     comment: format!("Unexpected `{}`", token.token_type),
                 })?;
                 instructions.push(Instruction {
-                    instruction_type: InstructionType::End(opener_idx),
+                    instruction_type: match instructions[opener_idx].instruction_type {
+                        InstructionType::While(_) => InstructionType::End(opener_idx),
+                        InstructionType::Else(_) => InstructionType::Fi,
+                        _ => panic!("Unexpected `end`"),
+                    },
                     pos: token.pos,
                     line: token.line,
                 });
                 instructions[opener_idx] = instructions[opener_idx].set_jmp_pos(i)?;
+            }
+            TokenType::If => {
+                instructions.push(Instruction {
+                    instruction_type: InstructionType::If(0),
+                    pos: token.pos,
+                    line: token.line,
+                });
+                stack.push(i);
+            }
+            TokenType::Else => {
+                let opener_idx = stack.pop().ok_or(common::Error::Parse {
+                    word: format!("{}", token.token_type),
+                    pos: token.pos,
+                    line: token.line,
+                    comment: format!("Unexpected `{}`", token.token_type),
+                })?;
+
+                match instructions[opener_idx].instruction_type {
+                    InstructionType::If(_) => {
+                        instructions[opener_idx] = instructions[opener_idx].set_jmp_pos(i)?;
+                        instructions.push(Instruction {
+                            instruction_type: InstructionType::Else(0),
+                            pos: token.pos,
+                            line: token.line,
+                        });
+                        stack.push(i);
+                    }
+                    _ => {
+                        return Err(common::Error::Parse {
+                            word: format!("{}", token.token_type),
+                            pos: token.pos,
+                            line: token.line,
+                            comment: "This `else` has no matching if".to_string(),
+                        });
+                    }
+                }
             }
             TokenType::Dup => instructions.push(Instruction {
                 instruction_type: InstructionType::Dup,
@@ -164,7 +218,6 @@ pub fn parse(tokens: Vec<Token>) -> Result<Program, common::Error> {
                 pos: token.pos,
                 line: token.line,
             }),
-            _ => todo!(),
         }
         i += 1;
     }
@@ -549,6 +602,89 @@ mod parser_test {
                     line: 1,
                 },
             ]
+        );
+    }
+
+    #[test]
+    fn test_if_else_end() {
+        let (pos, line) = (1, 1);
+        let tokens = vec![
+            Token {
+                token_type: TokenType::Num(5),
+                pos,
+                line,
+            },
+            Token {
+                token_type: TokenType::If, // 1
+                pos,
+                line,
+            },
+            Token {
+                token_type: TokenType::Print,
+                pos,
+                line,
+            },
+            Token {
+                token_type: TokenType::Else, // 3
+                pos,
+                line,
+            },
+            Token {
+                token_type: TokenType::Num(1),
+                pos,
+                line,
+            },
+            Token {
+                token_type: TokenType::Add,
+                pos,
+                line,
+            },
+            Token {
+                token_type: TokenType::End, // 6
+                pos,
+                line,
+            },
+        ];
+        let program = parse(tokens);
+        assert_eq!(
+            program,
+            Ok(vec![
+                Instruction {
+                    instruction_type: InstructionType::Push(5),
+                    pos,
+                    line,
+                },
+                Instruction {
+                    instruction_type: InstructionType::If(3),
+                    pos,
+                    line,
+                },
+                Instruction {
+                    instruction_type: InstructionType::Print,
+                    pos,
+                    line,
+                },
+                Instruction {
+                    instruction_type: InstructionType::Else(6),
+                    pos,
+                    line,
+                },
+                Instruction {
+                    instruction_type: InstructionType::Push(1),
+                    pos,
+                    line,
+                },
+                Instruction {
+                    instruction_type: InstructionType::Add,
+                    pos,
+                    line,
+                },
+                Instruction {
+                    instruction_type: InstructionType::Fi,
+                    pos,
+                    line,
+                },
+            ])
         );
     }
 }
