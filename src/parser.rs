@@ -28,6 +28,27 @@ pub struct Instruction {
     pub line: usize,
 }
 
+impl Instruction {
+    fn set_jmp_pos(&self, jmp_pos: usize) -> Result<Instruction, common::Error> {
+        match self.instruction_type {
+            InstructionType::While(_) => Ok(Instruction {
+                instruction_type: InstructionType::While(jmp_pos),
+                ..*self
+            }),
+            InstructionType::End(_) => Ok(Instruction {
+                instruction_type: InstructionType::End(jmp_pos),
+                ..*self
+            }),
+            _ => Err(common::Error::Parse {
+                word: format!("{:?}", self.instruction_type),
+                pos: self.pos,
+                line: self.line,
+                comment: "This instruction doesn't support jmp".to_string(),
+            }),
+        }
+    }
+}
+
 pub fn parse(tokens: Vec<Token>) -> Result<Program, common::Error> {
     let mut instructions = Vec::new();
     let mut stack: Vec<usize> = vec![];
@@ -78,18 +99,18 @@ pub fn parse(tokens: Vec<Token>) -> Result<Program, common::Error> {
                 stack.push(i);
             }
             TokenType::End => {
-                let while_pos = stack.pop().ok_or(common::Error::Parse {
+                let opener_idx = stack.pop().ok_or(common::Error::Parse {
                     word: "end".to_string(),
                     pos: token.pos,
                     line: token.line,
-                    comment: "This `end` has no matching while".to_string(),
+                    comment: "Unexpected `end`".to_string(),
                 })?;
                 instructions.push(Instruction {
-                    instruction_type: InstructionType::End(while_pos),
+                    instruction_type: InstructionType::End(opener_idx),
                     pos: token.pos,
                     line: token.line,
                 });
-                instructions[while_pos].instruction_type = InstructionType::While(i);
+                instructions[opener_idx] = instructions[opener_idx].set_jmp_pos(i)?;
             }
             TokenType::Dup => instructions.push(Instruction {
                 instruction_type: InstructionType::Dup,
@@ -423,7 +444,7 @@ mod parser_test {
             assert_eq!(word, "end".to_string());
             assert_eq!(pos, 2);
             assert_eq!(line, 1);
-            assert_eq!(comment, "This `end` has no matching while".to_string());
+            assert_eq!(comment, "Unexpected `end`".to_string());
         } else {
             panic!("Expected ParseError for 'end' without 'while'");
         }
