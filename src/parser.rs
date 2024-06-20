@@ -164,6 +164,7 @@ pub fn parse(tokens: Vec<Token>) -> Result<Program, common::Error> {
                 pos: token.pos,
                 line: token.line,
             }),
+            _ => todo!(),
         }
         i += 1;
     }

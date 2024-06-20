@@ -13,6 +13,8 @@ pub enum TokenType {
     Print,
     While,
     End, // TODO: If, Then, Else, EndIf, While, EndWhile
+    If,
+    Else,
     // Stack operations
     Dup,
     Swap,
@@ -41,6 +43,8 @@ impl Display for TokenType {
                 TokenType::Rot => "rot".into(),
                 TokenType::Over => "over".into(),
                 TokenType::Nip => "nip".into(),
+                TokenType::If => "if".into(),
+                TokenType::Else => "else".into(),
             }
         )
     }
@@ -64,6 +68,8 @@ fn identifier(input: &str) -> Option<TokenType> {
         "rot" => Some(TokenType::Rot),
         "over" => Some(TokenType::Over),
         "nip" => Some(TokenType::Nip),
+        "if" => Some(TokenType::If),
+        "else" => Some(TokenType::Else),
         _ => None,
     }
 }
@@ -652,5 +658,17 @@ mod test_identifier {
     #[test]
     fn test_nip() {
         assert_eq!(identifier("nip"), Some(TokenType::Nip))
+    }
+
+    #[test]
+    fn test_if_else() {
+        assert_eq!(identifier("if"), Some(TokenType::If));
+        assert_eq!(identifier("else"), Some(TokenType::Else));
+    }
+
+    #[test]
+    fn test_anything() {
+        // TODO: change me to return and Identifier(str) once such thing exists
+        assert_eq!(identifier("anything"), None);
     }
 }
