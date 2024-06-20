@@ -1,0 +1,11 @@
+3
+if
+  print
+else
+  pop 5 print
+end
+
+0
+if print
+else pop 5 print
+end

@@ -157,9 +157,18 @@ impl<T: Stack<i32>> StackMachine<T> {
                         idx = jmp_pos;
                     }
                 }
-                If(_) => todo!(),
-                Else(_) => todo!(),
-                Fi => todo!(),
+                If(jmp_pos) => {
+                    let val = self.peek(instruction)?;
+                    if *val == 0 {
+                        idx = jmp_pos;
+                    }
+                }
+                Else(jmp_pos) => {
+                    idx = jmp_pos;
+                }
+                Fi => {
+                    // do nothing?
+                }
             }
             idx += 1;
         }
@@ -561,6 +570,96 @@ mod test_stack_machine {
         let mut machine = StackMachine::new(stack);
         let result = machine.execute(program);
         assert_eq!(result, Ok(vec![2, 0]));
+    }
+
+    #[test]
+    fn test_if_else_program() {
+        let program = vec![
+            Instruction {
+                instruction_type: InstructionType::Push(3),
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::If(3),
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Print,
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Else(7),
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Pop,
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Push(5),
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Print,
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Fi,
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Push(0),
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::If(11),
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Print,
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Else(15),
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Pop,
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Push(5),
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Print,
+                pos: 1,
+                line: 1,
+            },
+            Instruction {
+                instruction_type: InstructionType::Fi,
+                pos: 1,
+                line: 1,
+            },
+        ];
+        let stack = VecStack::new();
+        let mut machine = StackMachine::new(stack);
+        let result = machine.execute(program);
+        assert_eq!(result, Ok(vec![3, 5]));
     }
 }
 
