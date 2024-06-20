@@ -15,10 +15,10 @@ pub enum InstructionType {
     Div,
     Print,
     While(usize),
-    End(usize),
+    EndWhile(usize),
     If(usize),
     Else(usize),
-    Fi,
+    EndIf,
     Dup,
     Swap,
     Rot,
@@ -33,7 +33,7 @@ impl Display for InstructionType {
             "{}",
             match self {
                 InstructionType::While(_) => "while".into(),
-                InstructionType::End(_) => "end".into(),
+                InstructionType::EndWhile(_) => "end".into(),
                 InstructionType::Push(n) => n.to_string(),
                 InstructionType::Pop => "pop".into(),
                 InstructionType::Add => "+".into(),
@@ -48,7 +48,7 @@ impl Display for InstructionType {
                 InstructionType::Nip => "nip".into(),
                 InstructionType::If(_) => "if".into(),
                 InstructionType::Else(_) => "else".into(),
-                InstructionType::Fi => "end".into(),
+                InstructionType::EndIf => "end".into(),
             }
         )
     }
@@ -68,8 +68,8 @@ impl Instruction {
                 instruction_type: InstructionType::While(jmp_pos),
                 ..*self
             }),
-            InstructionType::End(_) => Ok(Instruction {
-                instruction_type: InstructionType::End(jmp_pos),
+            InstructionType::EndWhile(_) => Ok(Instruction {
+                instruction_type: InstructionType::EndWhile(jmp_pos),
                 ..*self
             }),
             InstructionType::If(_) => Ok(Instruction {
@@ -148,8 +148,8 @@ pub fn parse(tokens: Vec<Token>) -> Result<Program, common::Error> {
                 })?;
                 instructions.push(Instruction {
                     instruction_type: match instructions[opener_idx].instruction_type {
-                        InstructionType::While(_) => InstructionType::End(opener_idx),
-                        InstructionType::Else(_) => InstructionType::Fi,
+                        InstructionType::While(_) => InstructionType::EndWhile(opener_idx),
+                        InstructionType::Else(_) => InstructionType::EndIf,
                         _ => panic!("Unexpected `end`"),
                     },
                     pos: token.pos,
@@ -466,7 +466,7 @@ mod parser_test {
                     pos,
                 },
                 Instruction {
-                    instruction_type: InstructionType::End(1),
+                    instruction_type: InstructionType::EndWhile(1),
                     line,
                     pos,
                 }
@@ -680,7 +680,7 @@ mod parser_test {
                     line,
                 },
                 Instruction {
-                    instruction_type: InstructionType::Fi,
+                    instruction_type: InstructionType::EndIf,
                     pos,
                     line,
                 },

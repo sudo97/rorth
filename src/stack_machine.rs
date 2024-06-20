@@ -151,7 +151,7 @@ impl<T: Stack<i32>> StackMachine<T> {
                         idx = jmp_pos;
                     }
                 }
-                End(jmp_pos) => {
+                EndWhile(jmp_pos) => {
                     let val = self.peek(instruction)?;
                     if *val != 0 {
                         idx = jmp_pos;
@@ -166,7 +166,7 @@ impl<T: Stack<i32>> StackMachine<T> {
                 Else(jmp_pos) => {
                     idx = jmp_pos;
                 }
-                Fi => {
+                EndIf => {
                     // do nothing?
                 }
             }
@@ -370,7 +370,7 @@ mod test_stack_machine {
                 pos,
             },
             Instruction {
-                instruction_type: InstructionType::End(1),
+                instruction_type: InstructionType::EndWhile(1),
                 line,
                 pos,
             },
@@ -611,7 +611,7 @@ mod test_stack_machine {
                 line: 1,
             },
             Instruction {
-                instruction_type: InstructionType::Fi,
+                instruction_type: InstructionType::EndIf,
                 pos: 1,
                 line: 1,
             },
@@ -651,7 +651,7 @@ mod test_stack_machine {
                 line: 1,
             },
             Instruction {
-                instruction_type: InstructionType::Fi,
+                instruction_type: InstructionType::EndIf,
                 pos: 1,
                 line: 1,
             },
