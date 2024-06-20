@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::common;
 
 #[derive(PartialEq, Eq, Debug)]
@@ -17,6 +19,31 @@ pub enum TokenType {
     Rot,
     Over,
     Nip,
+}
+
+impl Display for TokenType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                TokenType::While => "while".into(),
+                TokenType::End => "end".into(),
+                TokenType::Num(n) => n.to_string(),
+                TokenType::Pop => "pop".into(),
+                TokenType::Add => "+".into(),
+                TokenType::Sub => "-".into(),
+                TokenType::Mul => "*".into(),
+                TokenType::Div => "/".into(),
+                TokenType::Print => "print".into(),
+                TokenType::Dup => "dup".into(),
+                TokenType::Swap => "swap".into(),
+                TokenType::Rot => "rot".into(),
+                TokenType::Over => "over".into(),
+                TokenType::Nip => "nip".into(),
+            }
+        )
+    }
 }
 
 #[derive(PartialEq, Eq, Debug)]

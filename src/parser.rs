@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::common;
 use crate::tokenizer::{Token, TokenType};
 
@@ -19,6 +21,31 @@ pub enum InstructionType {
     Rot,
     Over,
     Nip,
+}
+
+impl Display for InstructionType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                InstructionType::While(_) => "while".into(),
+                InstructionType::End(_) => "end".into(),
+                InstructionType::Push(n) => n.to_string(),
+                InstructionType::Pop => "pop".into(),
+                InstructionType::Add => "+".into(),
+                InstructionType::Sub => "-".into(),
+                InstructionType::Mul => "*".into(),
+                InstructionType::Div => "/".into(),
+                InstructionType::Print => "print".into(),
+                InstructionType::Dup => "dup".into(),
+                InstructionType::Swap => "swap".into(),
+                InstructionType::Rot => "rot".into(),
+                InstructionType::Over => "over".into(),
+                InstructionType::Nip => "nip".into(),
+            }
+        )
+    }
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -100,10 +127,10 @@ pub fn parse(tokens: Vec<Token>) -> Result<Program, common::Error> {
             }
             TokenType::End => {
                 let opener_idx = stack.pop().ok_or(common::Error::Parse {
-                    word: "end".to_string(),
+                    word: format!("{}", token.token_type),
                     pos: token.pos,
                     line: token.line,
-                    comment: "Unexpected `end`".to_string(),
+                    comment: format!("Unexpected `{}`", token.token_type),
                 })?;
                 instructions.push(Instruction {
                     instruction_type: InstructionType::End(opener_idx),
@@ -141,12 +168,24 @@ pub fn parse(tokens: Vec<Token>) -> Result<Program, common::Error> {
         i += 1;
     }
     if !stack.is_empty() {
-        let last_while = stack.pop().unwrap();
+        let Token {
+            line,
+            pos,
+            token_type,
+        } = tokens
+            .get(stack.pop().unwrap())
+            .ok_or(common::Error::Parse {
+                word: "".to_string(),
+                pos: 0,
+                line: 0,
+                comment: "impossible index".to_string(),
+            })?;
+
         Err(common::Error::Parse {
-            word: "while".to_string(),
-            pos: tokens[last_while].pos,
-            line: tokens[last_while].line,
-            comment: "This `while` has no matching end".to_string(),
+            word: format!("{}", token_type),
+            pos: *pos,
+            line: *line,
+            comment: format!("This `{}` has no matching end", token_type),
         })
     } else {
         Ok(instructions)
