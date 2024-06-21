@@ -4,6 +4,7 @@ use stack::VecStack;
 use stack_machine::StackMachine;
 use tokenizer::tokenize;
 
+mod checker;
 mod common;
 mod parser;
 mod stack;

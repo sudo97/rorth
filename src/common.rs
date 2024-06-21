@@ -11,6 +11,12 @@ pub enum Error {
         line: usize,
         comment: String,
     },
+    StaticCheck {
+        word: String,
+        pos: usize,
+        line: usize,
+        comment: String,
+    },
     StackEmpty {
         pos: usize,
         line: usize,

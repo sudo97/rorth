@@ -13,6 +13,7 @@ pub enum InstructionType {
     Sub,
     Mul,
     Div,
+    // TODO: LE, GE, EQ, NE, AND, OR
     Print,
     While(usize),
     EndWhile(usize),
