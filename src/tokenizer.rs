@@ -12,7 +12,7 @@ pub enum TokenType {
     Div,
     Print,
     While,
-    End, // TODO: If, Then, Else, EndIf, While, EndWhile
+    End,
     If,
     Else,
     // Stack operations
