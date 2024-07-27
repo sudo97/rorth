@@ -219,6 +219,12 @@ pub fn parse(tokens: Vec<Token>) -> Result<Program, common::Error> {
                 pos: token.pos,
                 line: token.line,
             }),
+            TokenType::Identifier(_) => {
+                todo!("Identifier is not implemented yet")
+            }
+            TokenType::Function => {
+                todo!("Function is not implemented yet")
+            }
         }
         i += 1;
     }

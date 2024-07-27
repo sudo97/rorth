@@ -15,12 +15,14 @@ pub enum TokenType {
     End,
     If,
     Else,
+    Function,
     // Stack operations
     Dup,
     Swap,
     Rot,
     Over,
     Nip,
+    Identifier(String),
 }
 
 impl Display for TokenType {
@@ -45,6 +47,8 @@ impl Display for TokenType {
                 TokenType::Nip => "nip".into(),
                 TokenType::If => "if".into(),
                 TokenType::Else => "else".into(),
+                TokenType::Identifier(s) => s.clone(),
+                TokenType::Function => "function".into(),
             }
         )
     }
@@ -57,20 +61,21 @@ pub struct Token {
     pub line: usize,
 }
 
-fn identifier(input: &str) -> Option<TokenType> {
+fn identifier(input: &str) -> TokenType {
     match input {
-        "print" => Some(TokenType::Print),
-        "pop" => Some(TokenType::Pop),
-        "while" => Some(TokenType::While),
-        "end" => Some(TokenType::End),
-        "dup" => Some(TokenType::Dup),
-        "swap" => Some(TokenType::Swap),
-        "rot" => Some(TokenType::Rot),
-        "over" => Some(TokenType::Over),
-        "nip" => Some(TokenType::Nip),
-        "if" => Some(TokenType::If),
-        "else" => Some(TokenType::Else),
-        _ => None,
+        "print" => TokenType::Print,
+        "pop" => TokenType::Pop,
+        "while" => TokenType::While,
+        "end" => TokenType::End,
+        "dup" => TokenType::Dup,
+        "swap" => TokenType::Swap,
+        "rot" => TokenType::Rot,
+        "over" => TokenType::Over,
+        "nip" => TokenType::Nip,
+        "if" => TokenType::If,
+        "else" => TokenType::Else,
+        "function" => TokenType::Function,
+        _ => TokenType::Identifier(input.to_string()),
     }
 }
 
@@ -168,11 +173,7 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, common::Error> {
             c if is_identifier_char(c) => {
                 let buf = collect_while!(idx, pos, chars, is_identifier_char);
                 let tok_begin_pos = pos - buf.len() + 1;
-                let token_type = identifier(&buf).ok_or(common::Error::UnknownToken {
-                    word: buf,
-                    pos: tok_begin_pos,
-                    line,
-                })?;
+                let token_type = identifier(&buf);
 
                 tokens.push(Token {
                     token_type,
@@ -480,62 +481,6 @@ mod tokenizer_tests {
     }
 
     #[test]
-    fn fails_if_word_is_not_a_number() {
-        let input = "a";
-        let tokens = tokenize(input);
-        assert_eq!(
-            tokens,
-            Err(common::Error::UnknownToken {
-                word: "a".to_string(),
-                pos: 1,
-                line: 1
-            })
-        );
-    }
-
-    #[test]
-    fn produces_proper_position() {
-        let input = "   a";
-        let tokens = tokenize(input);
-        assert_eq!(
-            tokens,
-            Err(common::Error::UnknownToken {
-                word: "a".to_string(),
-                pos: 4,
-                line: 1
-            })
-        );
-    }
-
-    #[test]
-    fn fails_if_unknown_token_not_at_line_3_pos_5() {
-        let input = "2 3 +\n4 5 *\n    a 7 -";
-        let tokens = tokenize(input);
-        assert_eq!(
-            tokens,
-            Err(common::Error::UnknownToken {
-                word: "a".to_string(),
-                pos: 5,
-                line: 3
-            })
-        );
-    }
-
-    #[test]
-    fn points_at_the_beginning_of_the_unknown_token() {
-        let input = "2 3 +\n4 5 *\n    abc 7 -";
-        let tokens = tokenize(input);
-        assert_eq!(
-            tokens,
-            Err(common::Error::UnknownToken {
-                word: "abc".to_string(),
-                pos: 5,
-                line: 3
-            })
-        );
-    }
-
-    #[test]
     fn fails_for_unknown_symbol() {
         let input = " ^";
         let tokens = tokenize(input);
@@ -612,63 +557,65 @@ mod test_identifier {
 
     #[test]
     fn test_identifier() {
-        assert_eq!(identifier("print"), Some(TokenType::Print));
-    }
-
-    #[test]
-    fn test_identifier_not_found() {
-        assert_eq!(identifier("unknown"), None);
+        assert_eq!(identifier("print"), (TokenType::Print));
     }
 
     #[test]
     fn test_pop() {
-        assert_eq!(identifier("pop"), Some(TokenType::Pop));
+        assert_eq!(identifier("pop"), (TokenType::Pop));
     }
 
     #[test]
     fn test_while() {
-        assert_eq!(identifier("while"), Some(TokenType::While))
+        assert_eq!(identifier("while"), (TokenType::While))
     }
 
     #[test]
     fn test_end() {
-        assert_eq!(identifier("end"), Some(TokenType::End))
+        assert_eq!(identifier("end"), (TokenType::End))
     }
 
     #[test]
     fn test_dup() {
-        assert_eq!(identifier("dup"), Some(TokenType::Dup))
+        assert_eq!(identifier("dup"), (TokenType::Dup))
     }
 
     #[test]
     fn test_swap() {
-        assert_eq!(identifier("swap"), Some(TokenType::Swap))
+        assert_eq!(identifier("swap"), (TokenType::Swap))
     }
 
     #[test]
     fn test_rot() {
-        assert_eq!(identifier("rot"), Some(TokenType::Rot))
+        assert_eq!(identifier("rot"), (TokenType::Rot))
     }
 
     #[test]
     fn test_over() {
-        assert_eq!(identifier("over"), Some(TokenType::Over))
+        assert_eq!(identifier("over"), (TokenType::Over))
     }
 
     #[test]
     fn test_nip() {
-        assert_eq!(identifier("nip"), Some(TokenType::Nip))
+        assert_eq!(identifier("nip"), (TokenType::Nip))
     }
 
     #[test]
     fn test_if_else() {
-        assert_eq!(identifier("if"), Some(TokenType::If));
-        assert_eq!(identifier("else"), Some(TokenType::Else));
+        assert_eq!(identifier("if"), (TokenType::If));
+        assert_eq!(identifier("else"), (TokenType::Else));
     }
 
     #[test]
     fn test_anything() {
-        // TODO: change me to return and Identifier(str) once such thing exists
-        assert_eq!(identifier("anything"), None);
+        assert_eq!(
+            identifier("anything"),
+            (TokenType::Identifier("anything".to_string()))
+        );
+    }
+
+    #[test]
+    fn test_function() {
+        assert_eq!(identifier("function"), (TokenType::Function));
     }
 }
