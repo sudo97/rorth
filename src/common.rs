@@ -21,4 +21,7 @@ pub enum Error {
         pos: usize,
         line: usize,
     },
+    FunctionNotFound {
+        name: String,
+    },
 }

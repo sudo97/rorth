@@ -26,6 +26,7 @@ pub enum InstructionType {
     Rot,
     Over,
     Nip,
+    Ret,
 }
 
 impl Display for InstructionType {
@@ -51,6 +52,7 @@ impl Display for InstructionType {
                 InstructionType::If(_) => "if".into(),
                 InstructionType::Else(_) => "else".into(),
                 InstructionType::EndIf => "end".into(),
+                InstructionType::Ret => "ret".into(),
             }
         )
     }
@@ -95,6 +97,7 @@ impl Instruction {
 pub fn parse(tokens: Vec<Token>) -> Result<Program, common::Error> {
     let mut instructions = Vec::new();
     let mut stack: Vec<usize> = vec![];
+    let mut functions: HashMap<String, usize> = HashMap::new();
     let mut i = 0;
     while let Some(token) = tokens.get(i) {
         match token.token_type {
@@ -224,7 +227,30 @@ pub fn parse(tokens: Vec<Token>) -> Result<Program, common::Error> {
                 todo!("Identifier is not implemented yet")
             }
             TokenType::Function => {
-                todo!("Function is not implemented yet")
+                i += 1;
+                match tokens.get(i) {
+                    Some(Token {
+                        token_type: TokenType::Identifier(name),
+                        ..
+                    }) => {
+                        functions.insert(name.to_owned(), instructions.len());
+                    }
+                    _ => {
+                        return Err(common::Error::Parse {
+                            word: "function".to_string(),
+                            pos: token.pos,
+                            line: token.line,
+                            comment: "Function name is missing".to_string(),
+                        })
+                    }
+                }
+            }
+            TokenType::Ret => {
+                instructions.push(Instruction {
+                    instruction_type: InstructionType::Ret,
+                    pos: token.pos,
+                    line: token.line,
+                });
             }
         }
         i += 1;
@@ -252,7 +278,7 @@ pub fn parse(tokens: Vec<Token>) -> Result<Program, common::Error> {
     } else {
         Ok(Program {
             instructions,
-            functions: HashMap::new(),
+            functions,
         })
     }
 }
@@ -697,5 +723,81 @@ mod parser_test {
                 },
             ])
         );
+    }
+
+    #[test]
+    fn function_decl() {
+        let tokens = vec![
+            Token {
+                token_type: TokenType::Function,
+                pos: 1,
+                line: 1,
+            },
+            Token {
+                token_type: TokenType::Identifier("test".to_string()),
+                pos: 1,
+                line: 1,
+            },
+            Token {
+                token_type: TokenType::Ret,
+                pos: 1,
+                line: 1,
+            },
+        ];
+        let program = parse(tokens).unwrap();
+        assert_eq!(
+            program.instructions,
+            vec![Instruction {
+                instruction_type: InstructionType::Ret,
+                pos: 1,
+                line: 1,
+            }]
+        );
+        assert_eq!(program.functions.len(), 1);
+        assert_eq!(program.functions.get("test").unwrap(), &0);
+    }
+
+    #[test]
+    fn function_decl_offset() {
+        let tokens = vec![
+            Token {
+                token_type: TokenType::Num(10),
+                pos: 1,
+                line: 1,
+            },
+            Token {
+                token_type: TokenType::Function,
+                pos: 1,
+                line: 1,
+            },
+            Token {
+                token_type: TokenType::Identifier("test".to_string()),
+                pos: 1,
+                line: 1,
+            },
+            Token {
+                token_type: TokenType::Ret,
+                pos: 1,
+                line: 1,
+            },
+        ];
+        let program = parse(tokens).unwrap();
+        assert_eq!(
+            program.instructions,
+            vec![
+                Instruction {
+                    instruction_type: InstructionType::Push(10),
+                    pos: 1,
+                    line: 1
+                },
+                Instruction {
+                    instruction_type: InstructionType::Ret,
+                    pos: 1,
+                    line: 1
+                }
+            ]
+        );
+        assert_eq!(program.functions.len(), 1);
+        assert_eq!(program.functions.get("test").unwrap(), &1);
     }
 }

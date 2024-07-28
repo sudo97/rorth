@@ -8,7 +8,7 @@ use crate::{
 
 pub struct Program {
     pub instructions: Vec<Instruction>,
-    pub functions: HashMap<String, Vec<Instruction>>,
+    pub functions: HashMap<String, usize>,
 }
 
 pub struct StackMachine<T: Stack<i32>>(pub T);
@@ -109,7 +109,12 @@ impl<T: Stack<i32>> StackMachine<T> {
 
     pub fn execute(&mut self, program: Program) -> Result<Vec<i32>, Error> {
         let mut result = vec![];
-        let mut idx = 0;
+        let mut idx = *(program
+            .functions
+            .get("main")
+            .ok_or(Error::FunctionNotFound {
+                name: "main".to_string(),
+            })?);
 
         while idx < program.instructions.len() {
             // stack.print();
@@ -174,6 +179,9 @@ impl<T: Stack<i32>> StackMachine<T> {
                 EndIf => {
                     // do nothing?
                 }
+                Ret => {
+                    todo!("implement me")
+                }
             }
             idx += 1;
         }
@@ -217,9 +225,11 @@ mod test_stack_machine {
     }
 
     fn to_program(instructions: Vec<Instruction>) -> Program {
+        let mut functions = HashMap::new();
+        functions.insert("main".to_string(), 0);
         Program {
             instructions,
-            functions: HashMap::new(),
+            functions,
         }
     }
 
@@ -672,6 +682,23 @@ mod test_stack_machine {
         let mut machine = StackMachine::new(stack);
         let result = machine.execute(to_program(program));
         assert_eq!(result, Ok(vec![3, 5]));
+    }
+
+    #[test]
+    fn test_function_not_found() {
+        let program = vec![];
+        let stack = VecStack::new();
+        let mut machine = StackMachine::new(stack);
+        let result = machine.execute(Program {
+            instructions: program,
+            functions: HashMap::new(),
+        });
+        assert_eq!(
+            result,
+            Err(Error::FunctionNotFound {
+                name: "main".to_string()
+            })
+        );
     }
 }
 
