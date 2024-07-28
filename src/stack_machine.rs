@@ -1,10 +1,15 @@
+use std::collections::HashMap;
+
 use crate::{
     common::Error,
     parser::{Instruction, InstructionType},
     stack::Stack,
 };
 
-pub type Program = Vec<Instruction>;
+pub struct Program {
+    pub instructions: Vec<Instruction>,
+    pub functions: HashMap<String, Vec<Instruction>>,
+}
 
 pub struct StackMachine<T: Stack<i32>>(pub T);
 
@@ -102,13 +107,13 @@ impl<T: Stack<i32>> StackMachine<T> {
         Ok(())
     }
 
-    pub fn execute(&mut self, program: Vec<Instruction>) -> Result<Vec<i32>, Error> {
+    pub fn execute(&mut self, program: Program) -> Result<Vec<i32>, Error> {
         let mut result = vec![];
         let mut idx = 0;
 
-        while idx < program.len() {
+        while idx < program.instructions.len() {
             // stack.print();
-            let instruction = &program[idx];
+            let instruction = &program.instructions[idx];
             use InstructionType::*;
             match instruction.instruction_type {
                 Push(n) => self.push(n),
@@ -207,8 +212,15 @@ mod test_stack_machine {
             },
         ];
         let mut machine = StackMachine::new(VecStack::new());
-        let result = machine.execute(program);
+        let result = machine.execute(to_program(program));
         assert_eq!(result, Ok(vec![3]));
+    }
+
+    fn to_program(instructions: Vec<Instruction>) -> Program {
+        Program {
+            instructions,
+            functions: HashMap::new(),
+        }
     }
 
     #[test]
@@ -236,7 +248,7 @@ mod test_stack_machine {
             },
         ];
         let mut machine = StackMachine::new(VecStack::new());
-        let result = machine.execute(program);
+        let result = machine.execute(to_program(program));
         assert_eq!(result, Ok(vec![1]));
     }
 
@@ -266,7 +278,7 @@ mod test_stack_machine {
         ];
         let stack = VecStack::new();
         let mut machine = StackMachine::new(stack);
-        let result = machine.execute(program);
+        let result = machine.execute(to_program(program));
         assert_eq!(result, Ok(vec![1]));
     }
 
@@ -298,7 +310,7 @@ mod test_stack_machine {
         ];
         let stack = VecStack::new();
         let mut machine = StackMachine::new(stack);
-        let result = machine.execute(program);
+        let result = machine.execute(to_program(program));
         assert_eq!(result, Ok(vec![a * b]));
     }
 
@@ -330,7 +342,7 @@ mod test_stack_machine {
         ];
         let stack = VecStack::new();
         let mut machine = StackMachine::new(stack);
-        let result = machine.execute(program);
+        let result = machine.execute(to_program(program));
         assert_eq!(result, Ok(vec![a / b]));
     }
 
@@ -378,7 +390,7 @@ mod test_stack_machine {
 
         let stack = VecStack::new();
         let mut machine = StackMachine::new(stack);
-        let result = machine.execute(program);
+        let result = machine.execute(to_program(program));
         assert_eq!(result, Ok(vec![5, 5, 5]));
     }
 
@@ -408,7 +420,7 @@ mod test_stack_machine {
         ];
         let stack = VecStack::new();
         let mut machine = StackMachine::new(stack);
-        let result = machine.execute(program);
+        let result = machine.execute(to_program(program));
         assert_eq!(result, Ok(vec![3, 3]));
     }
 
@@ -443,7 +455,7 @@ mod test_stack_machine {
         ];
         let stack = VecStack::new();
         let mut machine = StackMachine::new(stack);
-        let result = machine.execute(program);
+        let result = machine.execute(to_program(program));
         assert_eq!(result, Ok(vec![1, 2]));
     }
 
@@ -488,7 +500,7 @@ mod test_stack_machine {
         ];
         let stack = VecStack::new();
         let mut machine = StackMachine::new(stack);
-        let result = machine.execute(program);
+        let result = machine.execute(to_program(program));
         assert_eq!(result, Ok(vec![1, 3, 2]));
     }
 
@@ -528,7 +540,7 @@ mod test_stack_machine {
         ];
         let stack = VecStack::new();
         let mut machine = StackMachine::new(stack);
-        let result = machine.execute(program);
+        let result = machine.execute(to_program(program));
         assert_eq!(result, Ok(vec![1, 2, 1]));
     }
 
@@ -568,7 +580,7 @@ mod test_stack_machine {
         ];
         let stack = VecStack::new();
         let mut machine = StackMachine::new(stack);
-        let result = machine.execute(program);
+        let result = machine.execute(to_program(program));
         assert_eq!(result, Ok(vec![2, 0]));
     }
 
@@ -658,7 +670,7 @@ mod test_stack_machine {
         ];
         let stack = VecStack::new();
         let mut machine = StackMachine::new(stack);
-        let result = machine.execute(program);
+        let result = machine.execute(to_program(program));
         assert_eq!(result, Ok(vec![3, 5]));
     }
 }

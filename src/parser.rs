@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fmt::Display;
 
 use crate::common;
@@ -249,7 +250,10 @@ pub fn parse(tokens: Vec<Token>) -> Result<Program, common::Error> {
             comment: format!("This `{}` has no matching end", token_type),
         })
     } else {
-        Ok(instructions)
+        Ok(Program {
+            instructions,
+            functions: HashMap::new(),
+        })
     }
 }
 
@@ -268,7 +272,7 @@ mod parser_test {
         }];
         let program = parse(tokens).unwrap();
         assert_eq!(
-            program,
+            program.instructions,
             vec![Instruction {
                 instruction_type: InstructionType::Push(10),
                 pos: 1,
@@ -286,7 +290,7 @@ mod parser_test {
         }];
         let program = parse(tokens).unwrap();
         assert_eq!(
-            program,
+            program.instructions,
             vec![Instruction {
                 instruction_type: InstructionType::Add,
                 pos: 1,
@@ -304,7 +308,7 @@ mod parser_test {
         }];
         let program = parse(tokens).unwrap();
         assert_eq!(
-            program,
+            program.instructions,
             vec![Instruction {
                 instruction_type: InstructionType::Sub,
                 pos: 1,
@@ -322,7 +326,7 @@ mod parser_test {
         }];
         let program = parse(tokens).unwrap();
         assert_eq!(
-            program,
+            program.instructions,
             vec![Instruction {
                 instruction_type: InstructionType::Mul,
                 pos: 1,
@@ -340,7 +344,7 @@ mod parser_test {
         }];
         let program = parse(tokens).unwrap();
         assert_eq!(
-            program,
+            program.instructions,
             vec![Instruction {
                 instruction_type: InstructionType::Div,
                 pos: 1,
@@ -358,7 +362,7 @@ mod parser_test {
         }];
         let program = parse(tokens).unwrap();
         assert_eq!(
-            program,
+            program.instructions,
             vec![Instruction {
                 instruction_type: InstructionType::Print,
                 pos: 1,
@@ -376,7 +380,7 @@ mod parser_test {
         }];
         let program = parse(tokens).unwrap();
         assert_eq!(
-            program,
+            program.instructions,
             vec![Instruction {
                 instruction_type: InstructionType::Pop,
                 pos: 1,
@@ -435,7 +439,7 @@ mod parser_test {
         let result = parse(tokens).unwrap();
 
         assert_eq!(
-            result,
+            result.instructions,
             vec![
                 Instruction {
                     instruction_type: InstructionType::Push(3),
@@ -581,7 +585,7 @@ mod parser_test {
         ];
         let program = parse(tokens).unwrap();
         assert_eq!(
-            program,
+            program.instructions,
             vec![
                 Instruction {
                     instruction_type: InstructionType::Dup,
@@ -654,8 +658,8 @@ mod parser_test {
         ];
         let program = parse(tokens);
         assert_eq!(
-            program,
-            Ok(vec![
+            program.unwrap().instructions,
+            (vec![
                 Instruction {
                     instruction_type: InstructionType::Push(5),
                     pos,
