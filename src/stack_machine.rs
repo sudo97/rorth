@@ -116,6 +116,8 @@ impl<T: Stack<i32>> StackMachine<T> {
                 name: "main".to_string(),
             })?);
 
+        let mut call_stack = Vec::new();
+
         while idx < program.instructions.len() {
             // stack.print();
             let instruction = &program.instructions[idx];
@@ -179,8 +181,20 @@ impl<T: Stack<i32>> StackMachine<T> {
                 EndIf => {
                     // do nothing?
                 }
-                Ret => {
-                    todo!("implement me")
+                Ret => match call_stack.pop() {
+                    Some(jmp_pos) => {
+                        idx = jmp_pos + 1;
+                        continue;
+                    }
+                    None => {
+                        // Assume that we're in main
+                        return Ok(result);
+                    }
+                },
+                Call(jmp_pos) => {
+                    call_stack.push(idx);
+                    idx = jmp_pos;
+                    continue;
                 }
             }
             idx += 1;

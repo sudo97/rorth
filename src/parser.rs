@@ -26,6 +26,7 @@ pub enum InstructionType {
     Rot,
     Over,
     Nip,
+    Call(usize),
     Ret,
 }
 
@@ -53,6 +54,7 @@ impl Display for InstructionType {
                 InstructionType::Else(_) => "else".into(),
                 InstructionType::EndIf => "end".into(),
                 InstructionType::Ret => "ret".into(),
+                InstructionType::Call(i) => format!("call {}", i),
             }
         )
     }
@@ -100,9 +102,9 @@ pub fn parse(tokens: Vec<Token>) -> Result<Program, common::Error> {
     let mut functions: HashMap<String, usize> = HashMap::new();
     let mut i = 0;
     while let Some(token) = tokens.get(i) {
-        match token.token_type {
+        match &token.token_type {
             TokenType::Num(n) => instructions.push(Instruction {
-                instruction_type: InstructionType::Push(n),
+                instruction_type: InstructionType::Push(*n),
                 pos: token.pos,
                 line: token.line,
             }),
@@ -137,12 +139,12 @@ pub fn parse(tokens: Vec<Token>) -> Result<Program, common::Error> {
                 line: token.line,
             }),
             TokenType::While => {
+                stack.push(instructions.len());
                 instructions.push(Instruction {
                     instruction_type: InstructionType::While(0),
                     pos: token.pos,
                     line: token.line,
                 });
-                stack.push(i);
             }
             TokenType::End => {
                 let opener_idx = stack.pop().ok_or(common::Error::Parse {
@@ -155,7 +157,17 @@ pub fn parse(tokens: Vec<Token>) -> Result<Program, common::Error> {
                     instruction_type: match instructions[opener_idx].instruction_type {
                         InstructionType::While(_) => InstructionType::EndWhile(opener_idx),
                         InstructionType::Else(_) => InstructionType::EndIf,
-                        _ => panic!("Unexpected `end`"),
+                        _ => {
+                            println!(
+                                "{:?}",
+                                instructions
+                                    .into_iter()
+                                    .map(|i| i.instruction_type)
+                                    .collect::<Vec<_>>()
+                            );
+                            println!("opener_idx: {}", opener_idx);
+                            panic!("Unexpected `end`")
+                        }
                     },
                     pos: token.pos,
                     line: token.line,
@@ -163,12 +175,12 @@ pub fn parse(tokens: Vec<Token>) -> Result<Program, common::Error> {
                 instructions[opener_idx] = instructions[opener_idx].set_jmp_pos(i)?;
             }
             TokenType::If => {
+                stack.push(instructions.len());
                 instructions.push(Instruction {
                     instruction_type: InstructionType::If(0),
                     pos: token.pos,
                     line: token.line,
                 });
-                stack.push(i);
             }
             TokenType::Else => {
                 let opener_idx = stack.pop().ok_or(common::Error::Parse {
@@ -181,12 +193,12 @@ pub fn parse(tokens: Vec<Token>) -> Result<Program, common::Error> {
                 match instructions[opener_idx].instruction_type {
                     InstructionType::If(_) => {
                         instructions[opener_idx] = instructions[opener_idx].set_jmp_pos(i)?;
+                        stack.push(instructions.len());
                         instructions.push(Instruction {
                             instruction_type: InstructionType::Else(0),
                             pos: token.pos,
                             line: token.line,
                         });
-                        stack.push(i);
                     }
                     _ => {
                         return Err(common::Error::Parse {
@@ -223,9 +235,21 @@ pub fn parse(tokens: Vec<Token>) -> Result<Program, common::Error> {
                 pos: token.pos,
                 line: token.line,
             }),
-            TokenType::Identifier(_) => {
-                todo!("Identifier is not implemented yet")
-            }
+            TokenType::Identifier(ident) => match functions.get(ident) {
+                Some(i) => instructions.push(Instruction {
+                    instruction_type: InstructionType::Call(*i),
+                    pos: token.pos,
+                    line: token.line,
+                }),
+                None => {
+                    return Err(common::Error::Parse {
+                        word: format!("{}", token.token_type),
+                        pos: token.pos,
+                        line: token.line,
+                        comment: "Function not found".to_string(),
+                    })
+                }
+            },
             TokenType::Function => {
                 i += 1;
                 match tokens.get(i) {
@@ -799,5 +823,72 @@ mod parser_test {
         );
         assert_eq!(program.functions.len(), 1);
         assert_eq!(program.functions.get("test").unwrap(), &1);
+    }
+
+    #[test]
+    fn test_call() {
+        let tokens = vec![Token {
+            token_type: TokenType::Identifier("test".to_string()),
+            pos: 1,
+            line: 1,
+        }];
+        match parse(tokens) {
+            Err(common::Error::Parse {
+                word,
+                pos,
+                line,
+                comment,
+            }) => {
+                assert_eq!(word, "test".to_string());
+                assert_eq!(pos, 1);
+                assert_eq!(line, 1);
+                assert_eq!(comment, "Function not found".to_string());
+            }
+            _ => {
+                panic!("Expected Err, got Ok");
+            }
+        }
+    }
+
+    #[test]
+    fn test_call_with_function() {
+        let tokens = vec![
+            Token {
+                token_type: TokenType::Function,
+                pos: 1,
+                line: 1,
+            },
+            Token {
+                token_type: TokenType::Identifier("test".to_string()),
+                pos: 1,
+                line: 1,
+            },
+            Token {
+                token_type: TokenType::Ret,
+                pos: 1,
+                line: 1,
+            },
+            Token {
+                token_type: TokenType::Identifier("test".to_string()),
+                pos: 1,
+                line: 1,
+            },
+        ];
+        let program = parse(tokens).unwrap();
+        assert_eq!(
+            program.instructions,
+            vec![
+                Instruction {
+                    instruction_type: InstructionType::Ret,
+                    pos: 1,
+                    line: 1
+                },
+                Instruction {
+                    instruction_type: InstructionType::Call(0),
+                    pos: 1,
+                    line: 1,
+                }
+            ]
+        );
     }
 }

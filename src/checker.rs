@@ -90,6 +90,7 @@ pub fn check_stack_safety(program: &Vec<Instruction>) -> Result<(), Error> {
             InstructionType::Else(_) => todo!(),
             InstructionType::EndIf => todo!(),
             InstructionType::Ret => todo!(),
+            InstructionType::Call(_) => todo!(),
         }
     }
     if stack_size >= 0 {

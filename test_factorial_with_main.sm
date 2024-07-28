@@ -1,0 +1,21 @@
+function factorial
+  dup       # duplicate to get the counter, we are going to decrement [ acc; counter ]
+  1 -       # minus one from the counter                              [ acc; counter-1 ]
+
+  while     # while top is not zero                                   [ acc; counter-1 ] <- at the first iteration
+
+    swap    # swap the top two elements                               [ counter-1; acc ] <- at the first iteration
+    over    # duplicate the counter element                           [ counter-1; acc; counter-1 ] <- at the first iteration
+    *       # multiply the counter and the result                     [ counter-1; acc * (counter-1) ] <- at the first iteration
+    swap    # swap to get the counter on top                          [ acc*(counter-1); counter-1 ] <- at the first iteration
+    1 -     # minus one from the counter                              [ acc*(counter-1); counter-1-1 ] <- at the first iteration
+
+  end       # end the loop                                            [ acc; 0 ] <- at the end of the loop
+
+  pop       # remove the counter                                      [ acc ]
+ret
+
+function main
+  5 factorial
+  print
+ret
