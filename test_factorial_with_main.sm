@@ -1,4 +1,4 @@
-function factorial
+fun factorial
   dup       # duplicate to get the counter, we are going to decrement [ acc; counter ]
   1 -       # minus one from the counter                              [ acc; counter-1 ]
 
@@ -15,7 +15,7 @@ function factorial
   pop       # remove the counter                                      [ acc ]
 ret
 
-function main
+fun main
   5 factorial
   print
 ret
