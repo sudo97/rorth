@@ -250,7 +250,7 @@ pub fn parse(tokens: Vec<Token>) -> Result<Program, common::Error> {
                     })
                 }
             },
-            TokenType::Function => {
+            TokenType::Fun => {
                 i += 1;
                 match tokens.get(i) {
                     Some(Token {
@@ -753,7 +753,7 @@ mod parser_test {
     fn function_decl() {
         let tokens = vec![
             Token {
-                token_type: TokenType::Function,
+                token_type: TokenType::Fun,
                 pos: 1,
                 line: 1,
             },
@@ -790,7 +790,7 @@ mod parser_test {
                 line: 1,
             },
             Token {
-                token_type: TokenType::Function,
+                token_type: TokenType::Fun,
                 pos: 1,
                 line: 1,
             },
@@ -854,7 +854,7 @@ mod parser_test {
     fn test_call_with_function() {
         let tokens = vec![
             Token {
-                token_type: TokenType::Function,
+                token_type: TokenType::Fun,
                 pos: 1,
                 line: 1,
             },

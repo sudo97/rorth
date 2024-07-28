@@ -15,7 +15,7 @@ pub enum TokenType {
     End,
     If,
     Else,
-    Function,
+    Fun,
     Ret,
     // Stack operations
     Dup,
@@ -49,7 +49,7 @@ impl Display for TokenType {
                 TokenType::If => "if".into(),
                 TokenType::Else => "else".into(),
                 TokenType::Identifier(s) => s.clone(),
-                TokenType::Function => "function".into(),
+                TokenType::Fun => "function".into(),
                 TokenType::Ret => "ret".into(),
             }
         )
@@ -76,7 +76,7 @@ fn identifier(input: &str) -> TokenType {
         "nip" => TokenType::Nip,
         "if" => TokenType::If,
         "else" => TokenType::Else,
-        "function" => TokenType::Function,
+        "fun" => TokenType::Fun,
         "ret" => TokenType::Ret,
         _ => TokenType::Identifier(input.to_string()),
     }
@@ -619,7 +619,7 @@ mod test_identifier {
 
     #[test]
     fn test_function() {
-        assert_eq!(identifier("function"), (TokenType::Function));
+        assert_eq!(identifier("fun"), (TokenType::Fun));
     }
 
     #[test]
