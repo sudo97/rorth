@@ -1,0 +1,13 @@
+fun n_times
+  if
+    dup print
+    1 -
+    n_times
+  else
+    ret
+  end
+ret
+
+fun main
+  5 n_times
+ret
